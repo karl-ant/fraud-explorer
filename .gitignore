@@ -73,3 +73,4 @@ sketch
 
 # Optional eslint cache
 .eslintcache
+.claude/settings.local.json
