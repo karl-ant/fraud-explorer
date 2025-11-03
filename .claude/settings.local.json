@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(/C:\\Users\\karlj\\OneDrive\\Documents\\GitHub\\fraud_explorer/**)",
+      "Read(/C:\\Users\\karlj\\OneDrive\\Documents\\GitHub\\fraud_explorer\\src\\app/**)",
+      "Read(/C:\\Users\\karlj\\OneDrive\\Documents\\GitHub\\fraud_explorer\\src\\lib/**)",
+      "Read(/C:\\Users\\karlj\\OneDrive\\Documents\\GitHub\\fraud_explorer\\src\\app\\api\\query/**)",
+      "Bash(npm install)",
+      "Bash(npm view:*)",
+      "Bash(npm run dev:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
