@@ -1,6 +1,8 @@
 # Fraud Explorer MVP
 
-A sophisticated fraud detection and transaction analysis platform that enables risk teams to query and analyze transaction data across multiple payment processors using natural language queries powered by Claude AI. Features advanced fraud pattern detection algorithms and comprehensive risk analysis.
+This is a demo of a fraud detection and transaction analysis platform that enables risk teams to query and analyze transaction data across multiple payment processors using natural language queries powered by Claude AI. Features advanced fraud pattern detection algorithms and comprehensive risk analysis.
+
+All data is mocked, but you have the ability to test using the Stripe MCP connection as an example of using real data. ß 
 
 ## Screenshot
 
