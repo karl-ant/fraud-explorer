@@ -74,7 +74,7 @@ Fraud Detection: Custom pattern analysis algorithms
 
 ### Required Environment Variables (.env.local)
 ```
-ANTHROPIC_API_KEY=your_claude_api_key_here
+ANT_API_KEY=your_claude_api_key_here
 STRIPE_SECRET_KEY=your_stripe_secret_key_here
 ```
 
@@ -171,3 +171,4 @@ npm run lint            # Run ESLint
 - **Dependencies**: All installed and up to date
 
 This document provides complete context for continuing development of the Fraud Explorer application in future Claude Code sessions.
+- Do not use the public npm registry, only the internal

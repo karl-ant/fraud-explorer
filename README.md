@@ -49,7 +49,7 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
    
    Edit `.env.local` and add your API keys:
    ```
-   ANTHROPIC_API_KEY=your_claude_api_key_here
+   ANT_API_KEY=your_claude_api_key_here
    STRIPE_SECRET_KEY=your_stripe_secret_key_here
    ```
 

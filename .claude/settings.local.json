@@ -7,7 +7,14 @@
       "Read(/C:\\Users\\karlj\\OneDrive\\Documents\\GitHub\\fraud_explorer\\src\\app\\api\\query/**)",
       "Bash(npm install)",
       "Bash(npm view:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(git commit:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh repo create:*)",
+      "Bash(git add:*)",
+      "Bash(git push)",
+      "Bash(npm whoami:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
