@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Loader2 } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { Search, Loader2, AlertTriangle, BarChart3 } from 'lucide-react'
 
 interface QueryInterfaceProps {
   onQuery: (query: string, processor: 'stripe' | 'paypal' | 'all', useRealStripe?: boolean) => void
@@ -22,7 +23,7 @@ export default function QueryInterface({ onQuery, loading }: QueryInterfaceProps
 
   const fraudDetectionQueries = [
     "Show me all suspicious transaction patterns from today",
-    "Analyze card testing attacks from the last hour", 
+    "Analyze card testing attacks from the last hour",
     "Find high-risk international transactions over $5000",
     "Detect cryptocurrency fraud patterns",
     "Show velocity fraud attempts in PayPal",
@@ -33,62 +34,120 @@ export default function QueryInterface({ onQuery, loading }: QueryInterfaceProps
 
   const generalQueries = [
     "Show me all failed transactions from the last 30 days",
-    "Analyze successful vs failed transactions this month", 
+    "Analyze successful vs failed transactions this month",
     "List all transactions between $100-$1000",
     "Show transactions with high risk scores"
   ]
 
+  const processors = [
+    { value: 'all', label: 'All' },
+    { value: 'stripe', label: 'Stripe' },
+    { value: 'paypal', label: 'PayPal' },
+  ] as const
+
   return (
-    <div className="space-y-4">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="flex gap-4">
+    <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Search Input Row */}
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Search Input */}
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-text-tertiary h-5 w-5" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Ask about transaction patterns and fraud detection..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg"
+              className="
+                w-full pl-12 pr-4 py-4
+                bg-bg-tertiary border border-border-primary rounded-elegant
+                text-text-primary placeholder:text-text-tertiary
+                focus:ring-2 focus:ring-accent/50 focus:border-accent
+                transition-all duration-200
+                disabled:opacity-50 disabled:cursor-not-allowed
+              "
               disabled={loading}
             />
           </div>
-          
-          <select
-            value={processor}
-            onChange={(e) => setProcessor(e.target.value as 'stripe' | 'paypal' | 'all')}
-            className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={loading}
-          >
-            <option value="all">All Processors</option>
-            <option value="stripe">Stripe Only</option>
-            <option value="paypal">PayPal Only</option>
-          </select>
+
+          {/* Processor Selector - Segmented Control */}
+          <div className="flex items-center p-1 bg-bg-tertiary rounded-elegant border border-border-primary">
+            {processors.map(({ value, label }) => (
+              <motion.button
+                key={value}
+                type="button"
+                onClick={() => setProcessor(value)}
+                disabled={loading}
+                className={`
+                  relative px-4 py-3 text-sm font-medium rounded-lg transition-colors
+                  disabled:cursor-not-allowed
+                  ${processor === value
+                    ? 'text-text-primary'
+                    : 'text-text-tertiary hover:text-text-secondary'
+                  }
+                `}
+                whileHover={{ scale: processor === value ? 1 : 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {processor === value && (
+                  <motion.div
+                    layoutId="processor-indicator"
+                    className="absolute inset-0 bg-bg-secondary rounded-lg shadow-elegant-sm border border-border-primary"
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10">{label}</span>
+              </motion.button>
+            ))}
+          </div>
         </div>
-        
-        <div className="flex items-center space-x-2">
-          <input
-            type="checkbox"
-            id="useRealStripe"
-            checked={useRealStripe}
-            onChange={(e) => setUseRealStripe(e.target.checked)}
-            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-            disabled={loading}
-          />
-          <label htmlFor="useRealStripe" className="text-sm text-gray-700">
-            Use Stripe MCP server (requires Stripe API key)
+
+        {/* Checkbox */}
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <input
+              type="checkbox"
+              id="useRealStripe"
+              checked={useRealStripe}
+              onChange={(e) => setUseRealStripe(e.target.checked)}
+              className="
+                peer h-5 w-5 rounded border-border-secondary
+                text-accent focus:ring-accent/50 focus:ring-offset-0
+                bg-bg-tertiary
+                disabled:opacity-50 disabled:cursor-not-allowed
+              "
+              disabled={loading}
+            />
+          </div>
+          <label
+            htmlFor="useRealStripe"
+            className="text-sm text-text-secondary cursor-pointer select-none"
+          >
+            Use Stripe MCP server <span className="text-text-tertiary">(requires API key)</span>
           </label>
         </div>
-        
-        <button
+
+        {/* Submit Button */}
+        <motion.button
           type="submit"
           disabled={!query.trim() || loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+          className="
+            w-full py-4 px-6 rounded-elegant
+            bg-gradient-to-r from-amber-500 to-yellow-500
+            hover:from-amber-600 hover:to-yellow-600
+            text-stone-900 font-semibold
+            shadow-elegant hover:shadow-elegant-lg
+            transition-all duration-200
+            disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-elegant
+            flex items-center justify-center gap-2
+          "
+          whileHover={{ scale: loading ? 1 : 1.01 }}
+          whileTap={{ scale: loading ? 1 : 0.99 }}
         >
           {loading ? (
             <>
               <Loader2 className="h-5 w-5 animate-spin" />
-              <span>Processing query...</span>
+              <span>Analyzing...</span>
             </>
           ) : (
             <>
@@ -96,38 +155,71 @@ export default function QueryInterface({ onQuery, loading }: QueryInterfaceProps
               <span>Analyze Transactions</span>
             </>
           )}
-        </button>
+        </motion.button>
       </form>
 
-      <div className="space-y-4">
-        <div>
-          <p className="text-sm text-red-600 font-medium mb-2">🚨 Fraud Detection Example Queries:</p>
+      {/* Example Queries */}
+      <div className="space-y-6 pt-2">
+        {/* Fraud Detection Queries */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-danger" />
+            <h3 className="text-sm font-medium text-text-primary">Fraud Detection</h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {fraudDetectionQueries.map((example, index) => (
-              <button
+              <motion.button
                 key={`fraud-${index}`}
                 onClick={() => !loading && setQuery(example)}
-                className="text-left text-sm text-red-600 hover:text-red-800 hover:bg-red-50 p-2 rounded border border-red-200 hover:border-red-300 transition-colors disabled:opacity-50"
                 disabled={loading}
+                className="
+                  text-left text-sm p-3 rounded-elegant
+                  bg-danger-muted/50 hover:bg-danger-muted
+                  border border-danger/10 hover:border-danger/20
+                  text-text-secondary hover:text-danger
+                  transition-all duration-200
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                "
+                whileHover={{ scale: loading ? 1 : 1.01, y: loading ? 0 : -1 }}
+                whileTap={{ scale: loading ? 1 : 0.99 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.03 }}
               >
                 {example}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
-        
-        <div>
-          <p className="text-sm text-gray-600 font-medium mb-2">📊 General Analysis Example Queries:</p>
+
+        {/* General Analysis Queries */}
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4 text-accent" />
+            <h3 className="text-sm font-medium text-text-primary">General Analysis</h3>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {generalQueries.map((example, index) => (
-              <button
+              <motion.button
                 key={`general-${index}`}
                 onClick={() => !loading && setQuery(example)}
-                className="text-left text-sm text-blue-600 hover:text-blue-800 hover:bg-blue-50 p-2 rounded border border-gray-200 hover:border-blue-300 transition-colors disabled:opacity-50"
                 disabled={loading}
+                className="
+                  text-left text-sm p-3 rounded-elegant
+                  bg-accent-muted/50 hover:bg-accent-muted
+                  border border-accent/10 hover:border-accent/20
+                  text-text-secondary hover:text-accent
+                  transition-all duration-200
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                "
+                whileHover={{ scale: loading ? 1 : 1.01, y: loading ? 0 : -1 }}
+                whileTap={{ scale: loading ? 1 : 0.99 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: (fraudDetectionQueries.length + index) * 0.03 }}
               >
                 {example}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
