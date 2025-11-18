@@ -16,7 +16,8 @@
       "Bash(npm whoami:*)",
       "Bash(curl:*)",
       "Skill(frontend-design:frontend-design)",
-      "Bash(NEXT_DISABLE_SWC_LOCKFILE_PATCH=1 npm run dev)"
+      "Bash(NEXT_DISABLE_SWC_LOCKFILE_PATCH=1 npm run dev)",
+      "Bash(git push -u origin frontend-design-test)"
     ],
     "deny": [],
     "ask": []
