@@ -55,3 +55,4 @@ Pass `useRealStripe: true` in API requests to `/api/query`:
 1. Create client in `src/lib/[processor]-mock.ts`
 2. Add to API route in `src/app/api/query/route.ts`
 3. Add processor option to `src/components/QueryInterface.tsx`
+- please only run the app on port 3000

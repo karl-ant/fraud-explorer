@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronUp, ChevronDown, CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react'
+import { ChevronUp, ChevronDown, CheckCircle, XCircle, Clock, AlertCircle, ExternalLink, Database } from 'lucide-react'
 import { TransactionData } from '@/types'
 
 interface DataTableProps {
@@ -27,26 +27,22 @@ export default function DataTable({ data }: DataTableProps) {
   const sortedData = [...data].sort((a, b) => {
     const aValue = a[sortField]
     const bValue = b[sortField]
-    
+
     if (aValue === bValue) return 0
     if (aValue == null) return 1
     if (bValue == null) return -1
-    
+
     const comparison = aValue < bValue ? -1 : 1
     return sortDirection === 'asc' ? comparison : -comparison
   })
 
   const formatCurrency = (amount: number, currency: string) => {
-    // Handle invalid amounts
     if (typeof amount !== 'number' || isNaN(amount) || amount === null || amount === undefined) {
       amount = 0
     }
-    
-    // Handle invalid currency
     if (!currency || typeof currency !== 'string') {
       currency = 'usd'
     }
-    
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency.toUpperCase(),
@@ -54,164 +50,237 @@ export default function DataTable({ data }: DataTableProps) {
   }
 
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleString()
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'succeeded':
-        return <CheckCircle className="h-4 w-4 text-green-600" />
-      case 'failed':
-        return <XCircle className="h-4 w-4 text-red-600" />
-      case 'pending':
-        return <Clock className="h-4 w-4 text-yellow-600" />
-      case 'canceled':
-        return <AlertCircle className="h-4 w-4 text-gray-600" />
-      default:
-        return <AlertCircle className="h-4 w-4 text-gray-400" />
+    const date = new Date(timestamp * 1000)
+    return {
+      date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
     }
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
       case 'succeeded':
-        return 'bg-green-100 text-green-800'
+        return {
+          icon: <CheckCircle className="h-3.5 w-3.5" />,
+          className: 'bg-status-success-bg border-status-success-border text-status-success-text',
+          glow: ''
+        }
       case 'failed':
-        return 'bg-red-100 text-red-800'
+        return {
+          icon: <XCircle className="h-3.5 w-3.5" />,
+          className: 'bg-status-failed-bg border-status-failed-border text-status-failed-text',
+          glow: 'shadow-glow-critical/30'
+        }
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800'
+        return {
+          icon: <Clock className="h-3.5 w-3.5" />,
+          className: 'bg-status-pending-bg border-status-pending-border text-status-pending-text',
+          glow: ''
+        }
       case 'canceled':
-        return 'bg-gray-100 text-gray-800'
+        return {
+          icon: <AlertCircle className="h-3.5 w-3.5" />,
+          className: 'bg-status-canceled-bg border-status-canceled-border text-status-canceled-text',
+          glow: ''
+        }
       default:
-        return 'bg-gray-100 text-gray-600'
+        return {
+          icon: <AlertCircle className="h-3.5 w-3.5" />,
+          className: 'bg-space-700 border-border text-text-tertiary',
+          glow: ''
+        }
     }
   }
 
   const getStripeTransactionUrl = (transactionId: string) => {
-    // Handle different Stripe ID formats
     if (!transactionId || typeof transactionId !== 'string') {
       return null
     }
-    
-    if (transactionId.startsWith('pi_')) {
-      // Payment Intent ID
-      return `https://dashboard.stripe.com/test/payments/${transactionId}`
-    } else if (transactionId.startsWith('ch_')) {
-      // Charge ID - convert to payments URL
+    if (transactionId.startsWith('pi_') || transactionId.startsWith('ch_')) {
       return `https://dashboard.stripe.com/test/payments/${transactionId}`
     } else if (transactionId.startsWith('pp_')) {
-      // PayPal transaction - return null (not applicable)
       return null
     }
-    
-    // Default case - assume it's a payment intent
     return `https://dashboard.stripe.com/test/payments/${transactionId}`
   }
 
   const SortButton = ({ field, children }: { field: SortField; children: React.ReactNode }) => (
     <button
       onClick={() => handleSort(field)}
-      className="flex items-center space-x-1 hover:text-blue-600 transition-colors"
+      className="flex items-center space-x-1.5 hover:text-terminal-300 transition-colors group"
     >
       <span>{children}</span>
-      {sortField === field && (
-        sortDirection === 'asc' ? 
-          <ChevronUp className="h-4 w-4" /> : 
-          <ChevronDown className="h-4 w-4" />
-      )}
+      <span className={`transition-opacity ${sortField === field ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}>
+        {sortField === field && sortDirection === 'asc' ? (
+          <ChevronUp className="h-3.5 w-3.5 text-terminal-400" />
+        ) : (
+          <ChevronDown className="h-3.5 w-3.5 text-terminal-400" />
+        )}
+      </span>
     </button>
   )
 
   if (!data || data.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
-        No transactions found for your query.
+      <div className="text-center py-12 space-y-3" data-testid="data-table">
+        <Database className="h-10 w-10 text-space-500 mx-auto" />
+        <p className="text-text-secondary">No transactions found for your query.</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-4" data-testid="data-table">
+      {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Transaction Results ({data.length} transactions)
-        </h3>
+        <div className="flex items-center space-x-3">
+          <h3 className="text-sm font-display font-semibold uppercase tracking-wider text-text-primary">
+            Transaction Data
+          </h3>
+          <span className="px-2.5 py-1 bg-terminal-900/50 border border-terminal-400/30 rounded text-xs font-mono text-terminal-300">
+            {data.length} records
+          </span>
+        </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                <SortButton field="id">ID</SortButton>
+      {/* Table Container */}
+      <div className="overflow-x-auto rounded-lg border border-border bg-space-800">
+        <table className="min-w-full">
+          {/* Table Header */}
+          <thead>
+            <tr className="border-b border-border bg-space-900">
+              <th className="px-4 py-3 text-left">
+                <SortButton field="id">
+                  <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                    ID
+                  </span>
+                </SortButton>
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                <SortButton field="amount">Amount</SortButton>
+              <th className="px-4 py-3 text-left">
+                <SortButton field="amount">
+                  <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                    Amount
+                  </span>
+                </SortButton>
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                <SortButton field="status">Status</SortButton>
+              <th className="px-4 py-3 text-left">
+                <SortButton field="status">
+                  <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                    Status
+                  </span>
+                </SortButton>
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                <SortButton field="created">Date</SortButton>
+              <th className="px-4 py-3 text-left">
+                <SortButton field="created">
+                  <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                    Timestamp
+                  </span>
+                </SortButton>
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                Customer
+              <th className="px-4 py-3 text-left">
+                <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                  Customer
+                </span>
               </th>
-              <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                Description
+              <th className="px-4 py-3 text-left">
+                <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                  Description
+                </span>
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {sortedData.map((transaction) => {
+
+          {/* Table Body */}
+          <tbody className="divide-y divide-border-subtle">
+            {sortedData.map((transaction, index) => {
               const stripeUrl = getStripeTransactionUrl(transaction.id)
+              const statusConfig = getStatusConfig(transaction.status)
+              const formattedDate = formatDate(transaction.created)
+
               return (
-                <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 text-sm font-mono">
+                <tr
+                  key={transaction.id}
+                  className="hover:bg-space-700/50 transition-colors duration-150"
+                  style={{ animationDelay: `${index * 20}ms` }}
+                >
+                  {/* ID Column */}
+                  <td className="px-4 py-3">
                     {stripeUrl ? (
                       <a
                         href={stripeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                        className="inline-flex items-center space-x-1.5 text-terminal-300 hover:text-terminal-200 transition-colors group"
                         title="View in Stripe Dashboard"
                       >
-                        {transaction.id && typeof transaction.id === 'string' ? transaction.id.slice(0, 20) + '...' : String(transaction.id || 'N/A')}
+                        <span className="font-mono text-sm">
+                          {transaction.id?.slice(0, 18)}...
+                        </span>
+                        <ExternalLink className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </a>
                     ) : (
-                      <span className="text-gray-600">
-                        {transaction.id && typeof transaction.id === 'string' ? transaction.id.slice(0, 20) + '...' : String(transaction.id || 'N/A')}
+                      <span className="font-mono text-sm text-text-mono">
+                        {transaction.id?.slice(0, 18)}...
                       </span>
                     )}
                   </td>
-                <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                  {formatCurrency(transaction.amount, transaction.currency)}
-                </td>
-                <td className="px-4 py-3 text-sm">
-                  <div className="flex items-center space-x-2">
-                    {getStatusIcon(transaction.status)}
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(transaction.status)}`}>
-                      {transaction.original_status || transaction.status}
+
+                  {/* Amount Column */}
+                  <td className="px-4 py-3">
+                    <span className="font-mono text-sm font-medium text-text-primary tabular-nums">
+                      {formatCurrency(transaction.amount, transaction.currency)}
                     </span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  {formatDate(transaction.created)}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  {transaction.customer ? (
-                    <span className="font-mono">{transaction.customer.slice(0, 15)}...</span>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-600">
-                  {transaction.description || (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </td>
-              </tr>
-            )})}
+                    <span className="ml-1.5 text-xs text-text-tertiary uppercase">
+                      {transaction.currency}
+                    </span>
+                  </td>
+
+                  {/* Status Column */}
+                  <td className="px-4 py-3">
+                    <div className={`inline-flex items-center space-x-1.5 px-2 py-1 rounded border text-xs font-medium ${statusConfig.className} ${statusConfig.glow}`}>
+                      {statusConfig.icon}
+                      <span className="uppercase tracking-wide">
+                        {transaction.original_status || transaction.status}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Date Column */}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-col">
+                      <span className="font-mono text-sm text-text-primary">
+                        {formattedDate.time}
+                      </span>
+                      <span className="text-xs text-text-tertiary">
+                        {formattedDate.date}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Customer Column */}
+                  <td className="px-4 py-3">
+                    {transaction.customer ? (
+                      <span className="font-mono text-sm text-text-mono">
+                        {transaction.customer.slice(0, 12)}...
+                      </span>
+                    ) : (
+                      <span className="text-text-tertiary text-sm">—</span>
+                    )}
+                  </td>
+
+                  {/* Description Column */}
+                  <td className="px-4 py-3">
+                    {transaction.description ? (
+                      <span className="text-sm text-text-secondary line-clamp-1 max-w-[200px]">
+                        {transaction.description}
+                      </span>
+                    ) : (
+                      <span className="text-text-tertiary text-sm">—</span>
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       </div>

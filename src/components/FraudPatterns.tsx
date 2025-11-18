@@ -1,6 +1,6 @@
 'use client'
 
-import { AlertTriangle, Shield, AlertCircle, Info } from 'lucide-react'
+import { AlertTriangle, Shield, AlertCircle, Info, ChevronRight, Target, Crosshair } from 'lucide-react'
 import { FraudPattern } from '@/types'
 
 interface FraudPatternsProps {
@@ -9,164 +9,191 @@ interface FraudPatternsProps {
 }
 
 export default function FraudPatterns({ patterns, onFilterTransactions }: FraudPatternsProps) {
-  const getRiskIcon = (riskLevel: string) => {
+
+  const getRiskConfig = (riskLevel: string) => {
     switch (riskLevel) {
       case 'critical':
-        return <AlertTriangle className="h-5 w-5 text-red-600" />
+        return {
+          icon: <AlertTriangle className="h-5 w-5" />,
+          cardClass: 'bg-risk-critical-surface border-2 border-risk-critical-border',
+          glowClass: 'shadow-glow-critical animate-pulse-critical',
+          iconClass: 'text-risk-critical-glow',
+          titleClass: 'text-risk-critical-text',
+          badgeClass: 'bg-risk-critical-bg border border-risk-critical-border text-risk-critical-text shadow-glow-critical/50',
+          textClass: 'text-risk-critical-text/80',
+          accentClass: 'border-risk-critical-border/50',
+          buttonHover: 'hover:border-risk-critical-glow hover:shadow-glow-critical/30',
+        }
       case 'high':
-        return <AlertCircle className="h-5 w-5 text-orange-600" />
+        return {
+          icon: <AlertCircle className="h-5 w-5" />,
+          cardClass: 'bg-risk-high-surface border-2 border-risk-high-border',
+          glowClass: 'shadow-glow-high',
+          iconClass: 'text-risk-high-glow',
+          titleClass: 'text-risk-high-text',
+          badgeClass: 'bg-risk-high-bg border border-risk-high-border text-risk-high-text',
+          textClass: 'text-risk-high-text/80',
+          accentClass: 'border-risk-high-border/50',
+          buttonHover: 'hover:border-risk-high-glow hover:shadow-glow-high/30',
+        }
       case 'medium':
-        return <Shield className="h-5 w-5 text-yellow-600" />
-      default:
-        return <Info className="h-5 w-5 text-blue-600" />
+        return {
+          icon: <Shield className="h-5 w-5" />,
+          cardClass: 'bg-risk-medium-surface border-2 border-risk-medium-border',
+          glowClass: 'shadow-glow-medium',
+          iconClass: 'text-risk-medium-glow',
+          titleClass: 'text-risk-medium-text',
+          badgeClass: 'bg-risk-medium-bg border border-risk-medium-border text-risk-medium-text',
+          textClass: 'text-risk-medium-text/80',
+          accentClass: 'border-risk-medium-border/50',
+          buttonHover: 'hover:border-risk-medium-glow hover:shadow-glow-medium/30',
+        }
+      default: // low
+        return {
+          icon: <Info className="h-5 w-5" />,
+          cardClass: 'bg-risk-low-surface border-2 border-risk-low-border',
+          glowClass: 'shadow-glow-low',
+          iconClass: 'text-risk-low-glow',
+          titleClass: 'text-risk-low-text',
+          badgeClass: 'bg-risk-low-bg border border-risk-low-border text-risk-low-text',
+          textClass: 'text-risk-low-text/80',
+          accentClass: 'border-risk-low-border/50',
+          buttonHover: 'hover:border-risk-low-glow hover:shadow-glow-low/30',
+        }
     }
   }
 
-  const getRiskColor = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'critical':
-        return 'border-red-300 bg-white'
-      case 'high':
-        return 'border-orange-300 bg-white'
-      case 'medium':
-        return 'border-yellow-300 bg-white'
-      default:
-        return 'border-blue-300 bg-white'
-    }
-  }
-
-  const getRiskTextColor = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'critical':
-        return 'text-gray-700'
-      case 'high':
-        return 'text-gray-700'
-      case 'medium':
-        return 'text-gray-700'
-      default:
-        return 'text-gray-700'
-    }
-  }
-
-  const getRiskTitleColor = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'critical':
-        return 'text-red-600'
-      case 'high':
-        return 'text-orange-600'
-      case 'medium':
-        return 'text-yellow-600'
-      default:
-        return 'text-blue-600'
-    }
-  }
-
-  const getRiskBadgeColor = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'critical':
-        return 'bg-red-100 text-red-800'
-      case 'high':
-        return 'bg-orange-100 text-orange-800'
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800'
-      default:
-        return 'bg-blue-100 text-blue-800'
-    }
+  const formatPatternType = (type: string) => {
+    return type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
   }
 
   if (!patterns.length) return null
 
+  // Sort patterns by risk level priority
+  const riskPriority = { critical: 0, high: 1, medium: 2, low: 3 }
+  const sortedPatterns = [...patterns].sort(
+    (a, b) => (riskPriority[a.risk_level as keyof typeof riskPriority] ?? 4) -
+              (riskPriority[b.risk_level as keyof typeof riskPriority] ?? 4)
+  )
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center space-x-2">
-        <AlertTriangle className="h-6 w-6 text-red-600" />
-        <h3 className="text-xl font-bold text-red-800">Fraud Patterns Detected</h3>
+      {/* Section Header */}
+      <div className="flex items-center space-x-3">
+        <div className="relative">
+          <Target className="h-6 w-6 text-risk-critical-glow" />
+          <div className="absolute inset-0 bg-risk-critical-glow/20 rounded-full blur-lg animate-pulse-critical" />
+        </div>
+        <h3 className="text-lg font-display font-bold uppercase tracking-wider text-risk-critical-text">
+          Threat Patterns Detected
+        </h3>
+        <span className="px-2.5 py-1 bg-risk-critical-bg border border-risk-critical-border rounded text-xs font-mono text-risk-critical-text">
+          {patterns.length} {patterns.length === 1 ? 'PATTERN' : 'PATTERNS'}
+        </span>
       </div>
-      
+
+      {/* Pattern Cards Grid */}
       <div className="grid gap-4">
-        {patterns.map((pattern, index) => (
-          <div
-            key={index}
-            className={`border rounded-lg p-5 ${getRiskColor(pattern.risk_level)}`}
-          >
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-3">
-                {getRiskIcon(pattern.risk_level)}
-                <div>
-                  <h4 className={`font-bold text-lg ${getRiskTitleColor(pattern.risk_level)}`}>
-                    {pattern.type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </h4>
-                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getRiskBadgeColor(pattern.risk_level)}`}>
-                    {pattern.risk_level} Risk
-                  </span>
+        {sortedPatterns.map((pattern, index) => {
+          const config = getRiskConfig(pattern.risk_level)
+
+          return (
+            <div
+              key={index}
+              className={`rounded-lg p-5 ${config.cardClass} ${config.glowClass} transition-all duration-300`}
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start space-x-3">
+                  <div className={`${config.iconClass} mt-0.5`}>
+                    {config.icon}
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className={`font-display font-bold text-lg uppercase tracking-wide ${config.titleClass}`}>
+                      {formatPatternType(pattern.type)}
+                    </h4>
+                    <span className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider ${config.badgeClass}`}>
+                      {pattern.risk_level} Risk
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <p className={`mb-4 ${getRiskTextColor(pattern.risk_level)}`}>
-              {pattern.description}
-            </p>
-            
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <h5 className={`font-medium mb-2 ${getRiskTextColor(pattern.risk_level)}`}>
-                  Fraud Indicators:
-                </h5>
-                <ul className="list-disc list-inside space-y-1">
-                  {pattern.indicators.map((indicator, i) => (
-                    <li key={i} className={`text-sm ${getRiskTextColor(pattern.risk_level)}`}>
-                      {indicator}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              
-              <div>
-                <h5 className={`font-medium mb-2 ${getRiskTextColor(pattern.risk_level)}`}>
-                  Affected Transactions:
-                </h5>
-                <div className={`text-sm ${getRiskTextColor(pattern.risk_level)}`}>
+
+              {/* Description */}
+              <p className={`mb-5 text-sm leading-relaxed ${config.textClass}`}>
+                {pattern.description}
+              </p>
+
+              {/* Details Grid */}
+              <div className="grid md:grid-cols-2 gap-4 mb-5">
+                {/* Indicators */}
+                <div className="space-y-2">
+                  <h5 className={`text-xs font-semibold uppercase tracking-wider ${config.titleClass}`}>
+                    Indicators
+                  </h5>
+                  <ul className="space-y-1.5">
+                    {pattern.indicators.map((indicator, i) => (
+                      <li key={i} className={`flex items-start space-x-2 text-sm ${config.textClass}`}>
+                        <Crosshair className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${config.iconClass}`} />
+                        <span>{indicator}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Affected Transactions */}
+                <div className="space-y-2">
+                  <h5 className={`text-xs font-semibold uppercase tracking-wider ${config.titleClass}`}>
+                    Affected Transactions
+                  </h5>
                   <button
                     onClick={() => onFilterTransactions?.(pattern.affected_transactions)}
-                    className="hover:bg-gray-100 p-2 rounded border border-gray-200 hover:border-blue-300 transition-colors text-left w-full"
+                    className={`w-full p-3 rounded-lg bg-space-800/50 border border-border/50
+                              ${config.buttonHover}
+                              disabled:opacity-50 disabled:cursor-not-allowed
+                              transition-all duration-200 text-left group`}
                     disabled={!onFilterTransactions}
                   >
-                    <div className="flex items-center justify-between">
-                      <span>
-                        {pattern.affected_transactions.length} transaction{pattern.affected_transactions.length > 1 ? 's' : ''}
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`font-mono text-sm font-medium ${config.titleClass}`}>
+                        {pattern.affected_transactions.length}
+                        <span className="text-text-secondary ml-1">
+                          {pattern.affected_transactions.length === 1 ? 'transaction' : 'transactions'}
+                        </span>
                       </span>
                       {onFilterTransactions && (
-                        <span className="text-xs text-blue-600 font-medium">
-                          Click to filter →
+                        <span className="flex items-center space-x-1 text-xs font-medium text-terminal-300 group-hover:text-terminal-200 transition-colors">
+                          <span>Filter</span>
+                          <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
                         </span>
                       )}
                     </div>
-                    <div className="font-mono text-xs text-gray-500 mt-1">
+                    <div className="font-mono text-xs text-text-tertiary truncate">
                       {pattern.affected_transactions.length <= 3 ? (
-                        <span>
-                          {pattern.affected_transactions.map(id => id.substring(0, 15) + '...').join(', ')}
-                        </span>
+                        pattern.affected_transactions.map(id => id.substring(0, 12) + '...').join(', ')
                       ) : (
-                        <span>
-                          {pattern.affected_transactions.slice(0, 2).map(id => id.substring(0, 15) + '...').join(', ')} +{pattern.affected_transactions.length - 2} more
-                        </span>
+                        <>
+                          {pattern.affected_transactions.slice(0, 2).map(id => id.substring(0, 12) + '...').join(', ')}
+                          <span className="text-text-secondary"> +{pattern.affected_transactions.length - 2} more</span>
+                        </>
                       )}
                     </div>
                   </button>
                 </div>
               </div>
+
+              {/* Recommendation */}
+              <div className={`border-t ${config.accentClass} pt-4`}>
+                <h5 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${config.titleClass}`}>
+                  Recommended Action
+                </h5>
+                <p className={`text-sm font-medium ${config.textClass}`}>
+                  {pattern.recommendation}
+                </p>
+              </div>
             </div>
-            
-            <div className="border-t border-gray-200 pt-3">
-              <h5 className={`font-medium mb-2 ${getRiskTextColor(pattern.risk_level)}`}>
-                Recommended Action:
-              </h5>
-              <p className={`text-sm font-medium ${getRiskTextColor(pattern.risk_level)}`}>
-                {pattern.recommendation}
-              </p>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
