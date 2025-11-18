@@ -14,7 +14,9 @@
       "Bash(git add:*)",
       "Bash(git push)",
       "Bash(npm whoami:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Skill(frontend-design:frontend-design)",
+      "Bash(NEXT_DISABLE_SWC_LOCKFILE_PATCH=1 npm run dev)"
     ],
     "deny": [],
     "ask": []
