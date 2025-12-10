@@ -53,9 +53,24 @@ Return ONLY valid JSON, no additional text.`
     const content = response.content[0]
     if (content.type === 'text') {
       try {
-        return JSON.parse(content.text)
+        const parsed = JSON.parse(content.text)
+
+        // Validate structure
+        if (!parsed.filters || typeof parsed.filters !== 'object') {
+          throw new Error('Missing or invalid filters object')
+        }
+
+        if (!parsed.intent || typeof parsed.intent !== 'string') {
+          throw new Error('Missing or invalid intent field')
+        }
+
+        return parsed
       } catch (error) {
-        console.error('Failed to parse Claude response as JSON:', content.text)
+        console.error('Failed to parse Claude response as JSON')
+        // Log first 100 chars only for debugging (avoid data leakage)
+        if (error instanceof Error && error.message.includes('JSON')) {
+          console.debug('Response preview:', content.text.substring(0, 100))
+        }
         throw new Error('Invalid Claude response format')
       }
     }

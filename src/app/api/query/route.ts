@@ -138,8 +138,26 @@ function applyClaudeFilters(claudeResponse: any, fallbackQuery: string) {
 
     return filters
   } catch (error) {
-    console.error('Failed to apply Claude filters, falling back to regex:', error)
-    // Fallback to legacy parsing if Claude parsing fails
+    console.error('Failed to apply Claude filters:', error)
+
+    // Distinguish between parsing errors (fallback OK) and API errors (should surface)
+    if (error instanceof Error) {
+      // Parsing/validation errors - safe to fallback
+      if (error.message.includes('Invalid Claude response') ||
+          error.message.includes('Missing or invalid')) {
+        console.warn('Falling back to legacy regex parsing')
+        return parseQueryToFiltersLegacy(fallbackQuery)
+      }
+
+      // API/network errors - propagate to user
+      if (error.message.includes('Failed to process query') ||
+          error.message.includes('Claude API error')) {
+        throw error
+      }
+    }
+
+    // Unknown error - fallback but log
+    console.warn('Unknown error in Claude filter processing, falling back to regex')
     return parseQueryToFiltersLegacy(fallbackQuery)
   }
 }

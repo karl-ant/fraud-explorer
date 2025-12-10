@@ -30,6 +30,37 @@ export class MockTransactionGenerator {
   private config: GeneratorConfig
 
   constructor(config: GeneratorConfig) {
+    // Validate count
+    if (config.count < 1 || config.count > 10000) {
+      throw new Error('Transaction count must be between 1 and 10,000')
+    }
+
+    // Validate fraud mix sums to 100%
+    const fraudTotal = Object.values(config.fraudMix).reduce((sum, val) => sum + val, 0)
+    if (Math.abs(fraudTotal - 100) > 0.01) {
+      throw new Error(`Fraud mix percentages must sum to 100% (currently ${fraudTotal}%)`)
+    }
+
+    // Validate status distribution sums to 100%
+    const statusTotal = Object.values(config.statusDistribution).reduce((sum, val) => sum + val, 0)
+    if (Math.abs(statusTotal - 100) > 0.01) {
+      throw new Error(`Status distribution percentages must sum to 100% (currently ${statusTotal}%)`)
+    }
+
+    // Validate date range
+    if (config.dateRange.start > config.dateRange.end) {
+      throw new Error('Start date must be before end date')
+    }
+
+    // Validate all percentages are non-negative
+    const allPercentages = [
+      ...Object.values(config.fraudMix),
+      ...Object.values(config.statusDistribution)
+    ]
+    if (allPercentages.some(p => p < 0 || p > 100)) {
+      throw new Error('All percentages must be between 0 and 100')
+    }
+
     this.config = config
   }
 
@@ -338,17 +369,25 @@ export class MockTransactionGenerator {
 
     // Build status array based on distribution
     const total = dist.succeeded + dist.failed + dist.pending + dist.canceled
-    statuses.push(...Array(Math.floor(transactions.length * dist.succeeded / total)).fill('succeeded'))
-    statuses.push(...Array(Math.floor(transactions.length * dist.failed / total)).fill('failed'))
-    statuses.push(...Array(Math.floor(transactions.length * dist.pending / total)).fill('pending'))
-    statuses.push(...Array(Math.floor(transactions.length * dist.canceled / total)).fill('canceled'))
+    const succeededCount = Math.floor(transactions.length * dist.succeeded / total)
+    const failedCount = Math.floor(transactions.length * dist.failed / total)
+    const pendingCount = Math.floor(transactions.length * dist.pending / total)
+    const canceledCount = Math.floor(transactions.length * dist.canceled / total)
+
+    statuses.push(...Array(succeededCount).fill('succeeded'))
+    statuses.push(...Array(failedCount).fill('failed'))
+    statuses.push(...Array(pendingCount).fill('pending'))
+    statuses.push(...Array(canceledCount).fill('canceled'))
+
+    // Fill remaining slots with 'succeeded' (due to rounding)
+    while (statuses.length < transactions.length) {
+      statuses.push('succeeded')
+    }
 
     // Shuffle and apply
     this.shuffle(statuses)
     transactions.forEach((t, i) => {
-      if (i < statuses.length) {
-        t.status = statuses[i]
-      }
+      t.status = statuses[i]
     })
   }
 
