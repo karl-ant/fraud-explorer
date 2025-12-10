@@ -248,6 +248,7 @@ class StripeMCPClient {
             currency: charge.currency,
             status: this.mapStripeStatus(charge.status), // Keep mapped for filtering
             original_status: charge.status, // Add original status for display
+            processor: 'stripe' as const,
             created: charge.created,
             customer: charge.customer,
             description: charge.description,
@@ -271,6 +272,7 @@ class StripeMCPClient {
             currency: charge.currency || 'usd',
             status: this.mapStripeStatus(charge.status), // Keep mapped for filtering
             original_status: charge.status, // Add original status for display
+            processor: 'stripe' as const,
             created: charge.created || Math.floor(Date.now() / 1000),
             customer: charge.customer,
             description: charge.description,
@@ -324,6 +326,7 @@ class StripeMCPClient {
         amount: 2500, // $25.00 in cents
         currency: 'usd',
         status: 'succeeded' as const,
+        processor: 'stripe' as const,
         created: Math.floor(Date.now() / 1000) - 86400, // 1 day ago
         customer: 'cus_abc123',
         description: 'Monthly subscription',
@@ -335,6 +338,7 @@ class StripeMCPClient {
         amount: 5000, // $50.00 in cents
         currency: 'usd',
         status: 'failed' as const,
+        processor: 'stripe' as const,
         created: Math.floor(Date.now() / 1000) - 172800, // 2 days ago
         customer: 'cus_def456',
         description: 'Product purchase',
@@ -346,6 +350,7 @@ class StripeMCPClient {
         amount: 12000, // $120.00 in cents
         currency: 'usd',
         status: 'pending' as const,
+        processor: 'stripe' as const,
         created: Math.floor(Date.now() / 1000) - 3600, // 1 hour ago
         customer: 'cus_ghi789',
         description: 'Large order payment',
@@ -357,6 +362,7 @@ class StripeMCPClient {
         amount: 750, // $7.50 in cents
         currency: 'usd',
         status: 'succeeded' as const,
+        processor: 'stripe' as const,
         created: Math.floor(Date.now() / 1000) - 259200, // 3 days ago
         customer: 'cus_jkl012',
         description: 'Coffee purchase',
@@ -368,6 +374,7 @@ class StripeMCPClient {
         amount: 15000, // $150.00 in cents
         currency: 'usd',
         status: 'failed' as const,
+        processor: 'stripe' as const,
         created: Math.floor(Date.now() / 1000) - 7200, // 2 hours ago
         customer: undefined,
         description: 'Failed payment attempt',

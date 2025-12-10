@@ -157,6 +157,13 @@ export default function DataTable({ data }: DataTableProps) {
                 </SortButton>
               </th>
               <th className="px-4 py-3 text-left">
+                <SortButton field="processor">
+                  <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                    Processor
+                  </span>
+                </SortButton>
+              </th>
+              <th className="px-4 py-3 text-left">
                 <SortButton field="amount">
                   <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
                     Amount
@@ -222,6 +229,21 @@ export default function DataTable({ data }: DataTableProps) {
                       <span className="font-mono text-sm text-text-mono">
                         {transaction.id?.slice(0, 18)}...
                       </span>
+                    )}
+                  </td>
+
+                  {/* Processor Column */}
+                  <td className="px-4 py-3">
+                    {transaction.processor ? (
+                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium uppercase
+                        ${transaction.processor === 'stripe'
+                          ? 'bg-terminal-900/50 border border-terminal-500/30 text-terminal-300'
+                          : 'bg-blue-900/20 border border-blue-500/30 text-blue-300'
+                        }`}>
+                        {transaction.processor}
+                      </span>
+                    ) : (
+                      <span className="text-text-tertiary text-sm">—</span>
                     )}
                   </td>
 

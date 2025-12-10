@@ -4,6 +4,7 @@ export interface TransactionData {
   currency: string;
   status: 'succeeded' | 'failed' | 'pending' | 'canceled';
   original_status?: string; // Original status from payment processor
+  processor?: 'stripe' | 'paypal'; // Payment processor
   created: number;
   customer?: string;
   description?: string;
