@@ -238,7 +238,9 @@ export default function DataTable({ data }: DataTableProps) {
                       <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium uppercase
                         ${transaction.processor === 'stripe'
                           ? 'bg-terminal-900/50 border border-terminal-500/30 text-terminal-300'
-                          : 'bg-blue-900/20 border border-blue-500/30 text-blue-300'
+                          : transaction.processor === 'paypal'
+                          ? 'bg-blue-900/20 border border-blue-500/30 text-blue-300'
+                          : 'bg-purple-900/20 border border-purple-500/30 text-purple-300'
                         }`}>
                         {transaction.processor}
                       </span>

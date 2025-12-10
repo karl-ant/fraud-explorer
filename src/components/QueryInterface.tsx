@@ -4,13 +4,13 @@ import { useState } from 'react'
 import { Search, Loader2, Zap, BarChart3, Terminal } from 'lucide-react'
 
 interface QueryInterfaceProps {
-  onQuery: (query: string, processor: 'stripe' | 'paypal' | 'all', useRealStripe?: boolean) => void
+  onQuery: (query: string, processor: 'stripe' | 'paypal' | 'adyen' | 'all', useRealStripe?: boolean) => void
   loading: boolean
 }
 
 export default function QueryInterface({ onQuery, loading }: QueryInterfaceProps) {
   const [query, setQuery] = useState('')
-  const [processor, setProcessor] = useState<'stripe' | 'paypal' | 'all'>('all')
+  const [processor, setProcessor] = useState<'stripe' | 'paypal' | 'adyen' | 'all'>('all')
   const [useRealStripe, setUseRealStripe] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -68,7 +68,7 @@ export default function QueryInterface({ onQuery, loading }: QueryInterfaceProps
 
           {/* Processor Toggle */}
           <div className="flex bg-space-800 border border-border rounded-lg p-1 shadow-terminal-input">
-            {(['all', 'stripe', 'paypal'] as const).map((value) => (
+            {(['all', 'stripe', 'paypal', 'adyen'] as const).map((value) => (
               <button
                 key={value}
                 type="button"
@@ -81,7 +81,7 @@ export default function QueryInterface({ onQuery, loading }: QueryInterfaceProps
                           }
                           disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                {value === 'all' ? 'All' : value === 'stripe' ? 'Stripe' : 'PayPal'}
+                {value === 'all' ? 'All' : value === 'stripe' ? 'Stripe' : value === 'paypal' ? 'PayPal' : 'Adyen'}
               </button>
             ))}
           </div>

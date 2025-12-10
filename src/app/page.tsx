@@ -5,14 +5,16 @@ import { Radar, Shield, AlertTriangle, X } from 'lucide-react'
 import QueryInterface from '@/components/QueryInterface'
 import DataTable from '@/components/DataTable'
 import FraudPatterns from '@/components/FraudPatterns'
-import { QueryResponse } from '@/types'
+import MockTransactionGenerator from '@/components/MockTransactionGenerator'
+import { QueryResponse, TransactionData } from '@/types'
+import { FraudDetector } from '@/lib/fraud-detector'
 
 export default function Home() {
   const [response, setResponse] = useState<QueryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [filteredTransactionIds, setFilteredTransactionIds] = useState<string[] | null>(null)
 
-  const handleQuery = async (query: string, processor: 'stripe' | 'paypal' | 'all' = 'all', useRealStripe = false) => {
+  const handleQuery = async (query: string, processor: 'stripe' | 'paypal' | 'adyen' | 'all' = 'all', useRealStripe = false) => {
     setLoading(true)
     setFilteredTransactionIds(null)
     try {
@@ -31,6 +33,17 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleMockGenerated = (transactions: TransactionData[]) => {
+    // Display generated transactions without making API call
+    const fraudPatterns = FraudDetector.analyzeFraudPatterns(transactions)
+    setResponse({
+      data: transactions,
+      summary: `Generated ${transactions.length} mock transactions with ${fraudPatterns.length} fraud patterns detected`,
+      fraud_patterns: fraudPatterns
+    })
+    setFilteredTransactionIds(null)
   }
 
   const handleFilterTransactions = (transactionIds: string[]) => {
@@ -80,8 +93,14 @@ export default function Home() {
       {/* Main Control Panel */}
       <div className="panel p-6 space-y-6">
         <QueryInterface onQuery={handleQuery} loading={loading} />
+      </div>
 
-        {response && (
+      {/* Mock Transaction Generator */}
+      <MockTransactionGenerator onTransactionsGenerated={handleMockGenerated} />
+
+      {/* Results Panel */}
+      {response && (
+        <div className="panel p-6 space-y-6">{response && (
           <div className="space-y-6 animate-slide-up">
             {/* Analysis Summary */}
             {response.summary && (
@@ -149,26 +168,8 @@ export default function Home() {
             )}
           </div>
         )}
-
-        {/* Empty State */}
-        {!response && !loading && (
-          <div className="text-center py-12 space-y-4">
-            <div className="relative inline-block">
-              <Shield className="h-16 w-16 text-space-500 mx-auto" />
-              <div className="absolute inset-0 bg-terminal-300/10 rounded-full blur-2xl" />
-            </div>
-            <div className="space-y-2">
-              <p className="text-text-secondary font-medium">
-                Awaiting query input
-              </p>
-              <p className="text-text-tertiary text-sm max-w-md mx-auto">
-                Enter a natural language query above to analyze transaction patterns
-                and detect potential fraud across your payment processors.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Footer Status Bar */}
       <footer className="flex items-center justify-center space-x-6 py-4 text-xs text-text-tertiary font-mono uppercase tracking-wider">
@@ -179,6 +180,10 @@ export default function Home() {
         <div className="flex items-center space-x-2">
           <div className="h-1.5 w-1.5 rounded-full bg-status-success-glow" />
           <span>PayPal</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <div className="h-1.5 w-1.5 rounded-full bg-status-success-glow" />
+          <span>Adyen</span>
         </div>
         <div className="flex items-center space-x-2">
           <div className="h-1.5 w-1.5 rounded-full bg-terminal-400 animate-pulse-slow" />
