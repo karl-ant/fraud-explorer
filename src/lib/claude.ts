@@ -55,18 +55,25 @@ Return ONLY valid JSON, no additional text.`
       try {
         const parsed = JSON.parse(content.text)
 
-        // Validate structure
-        if (!parsed.filters || typeof parsed.filters !== 'object') {
-          throw new Error('Missing or invalid filters object')
+        // Validate structure - filters and intent are optional but should be correct type if present
+        if (parsed.filters !== undefined && (parsed.filters === null || typeof parsed.filters !== 'object')) {
+          console.warn('Unexpected filters type, using empty object')
+          parsed.filters = {}
         }
 
-        if (!parsed.intent || typeof parsed.intent !== 'string') {
-          throw new Error('Missing or invalid intent field')
+        if (parsed.intent !== undefined && typeof parsed.intent !== 'string') {
+          console.warn('Unexpected intent type, using default')
+          parsed.intent = 'analysis'
+        }
+
+        // Ensure filters object exists even if Claude didn't provide it
+        if (!parsed.filters) {
+          parsed.filters = {}
         }
 
         return parsed
       } catch (error) {
-        console.error('Failed to parse Claude response as JSON')
+        console.error('Failed to parse Claude response as JSON:', error instanceof Error ? error.message : error)
         // Log first 100 chars only for debugging (avoid data leakage)
         if (error instanceof Error && error.message.includes('JSON')) {
           console.debug('Response preview:', content.text.substring(0, 100))
@@ -78,6 +85,19 @@ Return ONLY valid JSON, no additional text.`
     throw new Error('Unexpected response format from Claude')
   } catch (error) {
     console.error('Claude API error:', error)
+
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('Invalid Claude response format')) {
+        throw new Error('Failed to parse AI response. Please try rephrasing your query.')
+      }
+      if (error.message.includes('API key')) {
+        throw new Error('AI service configuration error. Please check API key.')
+      }
+      // Pass through the original error message for other cases
+      throw error
+    }
+
     throw new Error('Failed to process query with Claude')
   }
 }
