@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { processQuery } from '@/lib/claude'
 import StripeMCPClient from '@/lib/stripe-mcp'
 import PayPalMockClient from '@/lib/paypal-mock'
+import AdyenMockClient from '@/lib/adyen-mock'
 import { FraudDetector } from '@/lib/fraud-detector'
 import { TransactionData, QueryResponse } from '@/types'
 
@@ -20,8 +21,8 @@ export async function POST(request: NextRequest) {
     console.log('Processing query with Claude:', query)
     const claudeResponse = await processQuery(query)
 
-    // Parse Claude's response to determine what data to fetch
-    const filters = parseQueryToFilters(query, claudeResponse)
+    // Use Claude's structured response to determine what data to fetch
+    const filters = applyClaudeFilters(claudeResponse, query)
     
     let allTransactions: TransactionData[] = []
 
@@ -36,6 +37,12 @@ export async function POST(request: NextRequest) {
       const paypalMock = new PayPalMockClient()
       const paypalTransactions = await paypalMock.listTransactions(filters)
       allTransactions.push(...paypalTransactions)
+    }
+
+    if (processor === 'adyen' || processor === 'all') {
+      const adyenMock = new AdyenMockClient()
+      const adyenTransactions = await adyenMock.listTransactions(filters)
+      allTransactions.push(...adyenTransactions)
     }
 
     // Sort all transactions by date (most recent first)
@@ -72,7 +79,91 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function parseQueryToFilters(query: string, claudeResponse: string) {
+function applyClaudeFilters(claudeResponse: any, fallbackQuery: string) {
+  const filters: any = {}
+
+  try {
+    const { filters: claudeFilters } = claudeResponse
+
+    // Status filter - API supports single status
+    if (claudeFilters?.status && claudeFilters.status.length > 0) {
+      filters.status = claudeFilters.status[0]
+    }
+
+    // Amount filter (amounts from Claude are in cents)
+    if (claudeFilters?.amount) {
+      filters.amount = {}
+      if (claudeFilters.amount.min !== null && claudeFilters.amount.min !== undefined) {
+        filters.amount.gte = claudeFilters.amount.min
+      }
+      if (claudeFilters.amount.max !== null && claudeFilters.amount.max !== undefined) {
+        filters.amount.lte = claudeFilters.amount.max
+      }
+    }
+
+    // Time range filter
+    if (claudeFilters?.timeRange) {
+      filters.created = {}
+      const now = Math.floor(Date.now() / 1000)
+
+      if (claudeFilters.timeRange.relative) {
+        const ranges: Record<string, number> = {
+          'today': now - (now % 86400),
+          'last_week': now - (7 * 24 * 60 * 60),
+          'last_month': now - (30 * 24 * 60 * 60),
+          'last_30_days': now - (30 * 24 * 60 * 60)
+        }
+        if (ranges[claudeFilters.timeRange.relative]) {
+          filters.created.gte = ranges[claudeFilters.timeRange.relative]
+        }
+      } else {
+        if (claudeFilters.timeRange.start) {
+          filters.created.gte = Math.floor(new Date(claudeFilters.timeRange.start).getTime() / 1000)
+        }
+        if (claudeFilters.timeRange.end) {
+          filters.created.lte = Math.floor(new Date(claudeFilters.timeRange.end).getTime() / 1000)
+        }
+      }
+    }
+
+    // Additional filters
+    if (claudeFilters?.currency) filters.currency = claudeFilters.currency
+    if (claudeFilters?.country) filters.country = claudeFilters.country
+    if (claudeFilters?.customer) filters.customer = claudeFilters.customer
+
+    // Default limit
+    if (!filters.limit) {
+      filters.limit = 100
+    }
+
+    return filters
+  } catch (error) {
+    console.error('Failed to apply Claude filters:', error)
+
+    // Distinguish between parsing errors (fallback OK) and API errors (should surface)
+    if (error instanceof Error) {
+      // Parsing/validation errors - safe to fallback
+      if (error.message.includes('Invalid Claude response') ||
+          error.message.includes('Missing or invalid')) {
+        console.warn('Falling back to legacy regex parsing')
+        return parseQueryToFiltersLegacy(fallbackQuery)
+      }
+
+      // API/network errors - propagate to user
+      if (error.message.includes('Failed to process query') ||
+          error.message.includes('Claude API error')) {
+        throw error
+      }
+    }
+
+    // Unknown error - fallback but log
+    console.warn('Unknown error in Claude filter processing, falling back to regex')
+    return parseQueryToFiltersLegacy(fallbackQuery)
+  }
+}
+
+// Legacy fallback function for when Claude parsing fails
+function parseQueryToFiltersLegacy(query: string) {
   const filters: any = {}
   const queryLower = query.toLowerCase()
 

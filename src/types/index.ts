@@ -4,6 +4,7 @@ export interface TransactionData {
   currency: string;
   status: 'succeeded' | 'failed' | 'pending' | 'canceled';
   original_status?: string; // Original status from payment processor
+  processor?: 'stripe' | 'paypal' | 'adyen'; // Payment processor
   created: number;
   customer?: string;
   description?: string;
@@ -20,7 +21,7 @@ export interface QueryResponse {
 
 export interface QueryRequest {
   query: string;
-  processor?: 'stripe' | 'paypal' | 'all';
+  processor?: 'stripe' | 'paypal' | 'adyen' | 'all';
 }
 
 export interface FraudPattern {

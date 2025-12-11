@@ -102,6 +102,7 @@ class PayPalMockClient {
       amount: Math.floor(Math.random() * 200) + 100, // $1-$3
       currency: 'usd',
       status: (i < 12 ? 'failed' : 'succeeded') as const,
+      processor: 'paypal' as const,
       created: baseTime + (i * 30), // 30 seconds apart
       customer: 'cus_suspicious_001',
       description: 'Online purchase validation',
@@ -122,6 +123,7 @@ class PayPalMockClient {
         amount: 850000, // $8,500
         currency: 'eur',
         status: 'succeeded' as const,
+        processor: 'paypal' as const,
         created: now - 7200, // 2 hours ago
         customer: 'cus_intl_001',
         description: 'High-value international transfer',
@@ -138,6 +140,7 @@ class PayPalMockClient {
         amount: 1200000, // $12,000
         currency: 'gbp',
         status: 'pending' as const,
+        processor: 'paypal' as const,
         created: now - 5400, // 1.5 hours ago
         customer: undefined,
         description: 'Luxury goods purchase',
@@ -154,6 +157,7 @@ class PayPalMockClient {
         amount: 750000, // $7,500
         currency: 'cad',
         status: 'failed' as const,
+        processor: 'paypal' as const,
         created: now - 1800, // 30 minutes ago
         customer: 'cus_intl_002',
         description: 'Electronics purchase',
@@ -176,6 +180,7 @@ class PayPalMockClient {
       amount,
       currency: 'usd',
       status: (i % 3 === 0 ? 'failed' : 'succeeded') as const,
+      processor: 'paypal' as const,
       created: now - (3600 * (i + 1)), // Spaced over hours
       customer: `cus_round_${i}`,
       description: 'Business transaction',
@@ -198,6 +203,7 @@ class PayPalMockClient {
         amount: 45000, // $450
         currency: 'usd',
         status: 'succeeded' as const,
+        processor: 'paypal' as const,
         created: nightTime,
         customer: 'cus_night_001',
         description: 'Late night purchase',
@@ -215,6 +221,7 @@ class PayPalMockClient {
         amount: 12500, // $125
         currency: 'usd',
         status: 'succeeded' as const,
+        processor: 'paypal' as const,
         created: nightTime + 300, // 5 minutes later
         customer: 'cus_night_002',
         description: 'Gaming purchase',
@@ -242,6 +249,7 @@ class PayPalMockClient {
         amount: 25000, // $250
         currency: 'usd',
         status: 'failed' as const,
+        processor: 'paypal' as const,
         created: baseTime + (i * 60), // 1 minute apart
         customer: 'cus_retry_001',
         description: 'Subscription renewal',
@@ -255,13 +263,14 @@ class PayPalMockClient {
         }
       })
     }
-    
+
     // Finally successful
     retryTransactions.push({
       id: 'pp_retry_success_001',
       amount: 25000,
       currency: 'usd',
       status: 'succeeded' as const,
+      processor: 'paypal' as const,
       created: baseTime + (8 * 60),
       customer: 'cus_retry_001',
       description: 'Subscription renewal',
@@ -291,6 +300,7 @@ class PayPalMockClient {
         amount: normalAmounts[i % normalAmounts.length] * 100,
         currency: currencies[i % currencies.length],
         status: (Math.random() > 0.1 ? 'succeeded' : 'failed') as const, // 90% success rate
+        processor: 'paypal' as const,
         created: now - (Math.random() * 86400 * 7), // Random within last week
         customer: `cus_legit_${i}`,
         description: ['Online purchase', 'Subscription', 'Digital download', 'Service fee'][i % 4],
@@ -315,6 +325,7 @@ class PayPalMockClient {
       amount: Math.floor(Math.random() * 5000) + 1000, // $10-$60
       currency: 'usd',
       status: (i < 2 ? 'failed' : 'succeeded') as const,
+      processor: 'paypal' as const,
       created: baseTime + (i * 50), // 50 seconds apart
       customer: 'cus_velocity_001',
       description: 'Digital goods purchase',
@@ -334,12 +345,13 @@ class PayPalMockClient {
     // Transactions from countries known for fraud
     const highRiskCountries = ['NG', 'GH', 'ID', 'PK', 'BD']
     const riskCountryNames = ['Nigeria', 'Ghana', 'Indonesia', 'Pakistan', 'Bangladesh']
-    
+
     return highRiskCountries.map((country, i) => ({
       id: `pp_highrisk_${i.toString().padStart(3, '0')}`,
       amount: Math.floor(Math.random() * 100000) + 50000, // $500-$1500
       currency: 'usd',
       status: (Math.random() > 0.3 ? 'succeeded' : 'failed') as const, // 70% success
+      processor: 'paypal' as const,
       created: now - (3600 * (i + 1)), // Spaced over hours
       customer: `cus_highrisk_${i}`,
       description: 'International purchase',
@@ -362,6 +374,7 @@ class PayPalMockClient {
         amount: 500000, // $5,000
         currency: 'usd',
         status: 'succeeded' as const,
+        processor: 'paypal' as const,
         created: now - 900, // 15 minutes ago
         customer: 'cus_crypto_001',
         description: 'Bitcoin exchange deposit',
@@ -379,6 +392,7 @@ class PayPalMockClient {
         amount: 1000000, // $10,000
         currency: 'usd',
         status: 'pending' as const,
+        processor: 'paypal' as const,
         created: now - 600, // 10 minutes ago
         customer: undefined,
         description: 'Cryptocurrency purchase',

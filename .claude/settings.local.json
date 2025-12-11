@@ -14,7 +14,8 @@
       "Bash(git add:*)",
       "Bash(git push)",
       "Bash(npm whoami:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Skill(frontend-design:frontend-design)"
     ],
     "deny": [],
     "ask": []
