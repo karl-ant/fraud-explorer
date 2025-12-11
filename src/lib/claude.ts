@@ -7,7 +7,9 @@ const anthropic = new Anthropic({
 export async function processQuery(query: string) {
   const systemPrompt = `You are a fraud analyst assistant that interprets natural language queries about payment transaction data.
 
-Analyze the user's query and return a JSON object with these fields:
+CRITICAL: Your response must be ONLY a JSON object with NO other text before or after it. Do not include markdown code blocks, explanations, or any other text.
+
+Return a JSON object with these exact fields:
 
 {
   "filters": {
@@ -28,14 +30,19 @@ Analyze the user's query and return a JSON object with these fields:
   "explanation": "Brief explanation of what the query is asking for"
 }
 
+Important notes:
+- All amount values should be in cents (e.g., $10 = 1000)
+- Use ISO country codes (e.g., "NG" for Nigeria, "US" for United States)
+- Set fields to null if not applicable to the query
+
 Examples:
-- "failed transactions over $1000 from Nigeria last week"
-  → filters: { status: ["failed"], amount: { min: 100000 }, country: "NG", timeRange: { relative: "last_week" } }
+Query: "failed transactions over $1000 from Nigeria last week"
+Response: {"filters":{"status":["failed"],"amount":{"min":100000,"max":null},"country":"NG","timeRange":{"relative":"last_week","start":null,"end":null},"processors":null,"currency":null,"customer":null,"fraudIndicators":null},"intent":"analysis","explanation":"Show failed transactions over $1000 from Nigeria in the last week"}
 
-- "show me card testing attempts across all processors"
-  → filters: { fraudIndicators: ["card_testing"] }, intent: "fraud_detection"
+Query: "show me card testing attempts"
+Response: {"filters":{"fraudIndicators":["card_testing"],"status":null,"processors":null,"amount":null,"currency":null,"country":null,"timeRange":null,"customer":null},"intent":"fraud_detection","explanation":"Identify card testing fraud patterns"}
 
-Return ONLY valid JSON, no additional text.`
+REMEMBER: Return ONLY the JSON object, no markdown, no explanations, no code blocks.`
 
   try {
     const response = await anthropic.messages.create({
@@ -74,10 +81,15 @@ Return ONLY valid JSON, no additional text.`
         return parsed
       } catch (error) {
         console.error('Failed to parse Claude response as JSON:', error instanceof Error ? error.message : error)
-        // Log first 100 chars only for debugging (avoid data leakage)
-        if (error instanceof Error && error.message.includes('JSON')) {
-          console.debug('Response preview:', content.text.substring(0, 100))
+        // Log first 200 chars for debugging (helps identify markdown/extra text issues)
+        console.error('Claude response preview:', content.text.substring(0, 200))
+        console.error('Response length:', content.text.length, 'characters')
+
+        // Check if response contains markdown code blocks
+        if (content.text.includes('```')) {
+          console.error('Response contains markdown code blocks - Claude may not be following instructions')
         }
+
         throw new Error('Invalid Claude response format')
       }
     }
