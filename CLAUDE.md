@@ -1,7 +1,15 @@
 # Fraud Explorer
 
+> **Version**: 1.1.0 | **Last Updated**: 2025-12-11
+
 ## Critical Instructions
 - Do not use the public npm registry, only the internal registry
+- Always run the app on port 3000 (default)
+
+## Recent Changes (v1.1.0)
+- **Theme Update**: Lightened dark theme from near-black to dark slate blue for better readability
+- **Accordion UI**: Example queries now collapsed by default with expandable accordion
+- **Collapsible Fraud Cards**: Fraud pattern cards now show compact headers, expand on click
 
 ## Environment Variables (.env.local)
 ```
@@ -113,4 +121,24 @@ The app uses Claude to parse natural language queries into structured filters.
 ### Mock Generator Errors
 - **Cause**: Invalid configuration (percentages don't sum to 100%, invalid count, etc.)
 - **Solution**: Check browser console for validation error messages
-- please only run the app on port 3000
+
+## UI/Styling System
+
+### Theme Colors (`tailwind.config.js`)
+The app uses a "mission control" dark slate blue theme:
+- `space-deep`: `#0d1526` - Body background
+- `space-800`: `#1a2840` - Panels/cards
+- `space-700`: `#20304a` - Interactive surfaces
+- `terminal-500`: `#00a8ff` - Primary accent (cyan blue)
+
+### Accordion Components (`globals.css`)
+Collapsible sections use CSS grid-based animations:
+```css
+.accordion-content { display: grid; grid-template-rows: 0fr; }
+.accordion-content.expanded { grid-template-rows: 1fr; }
+.accordion-inner { overflow: hidden; }
+```
+
+### Key UI Components
+- **QueryInterface**: Example queries collapsed by default, toggle via accordion header
+- **FraudPatterns**: Pattern cards show compact headers (icon, name, badge, count), expand to show full details

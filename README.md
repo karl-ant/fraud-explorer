@@ -15,7 +15,8 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
 - **Advanced Fraud Detection**: 8 sophisticated fraud pattern detection algorithms analyzing transactions in real-time
 - **Multi-Processor Support**: Unified view across Stripe, PayPal, and Adyen (with mock data for demo)
 - **Mock Transaction Generator**: Create custom test datasets with configurable fraud patterns and status distributions
-- **Interactive Visualizations**: Sortable transaction tables with fraud pattern cards showing risk levels
+- **Interactive Visualizations**: Sortable transaction tables with collapsible fraud pattern cards showing risk levels
+- **Clean UI**: Dark slate blue theme with collapsible accordions for example queries and fraud patterns
 - **100+ Mock Transactions**: Diverse dataset with realistic fraud patterns across all 3 processors
 
 ### Fraud Detection Algorithms
@@ -107,12 +108,13 @@ Try these natural language queries to see fraud detection in action:
 
 1. **Query Interface** (`src/components/QueryInterface.tsx`)
    - Natural language input with processor selection (Stripe, PayPal, or All)
+   - Collapsible example queries accordion (fraud detection + general analysis templates)
    - Real-time loading states and error handling
 
 2. **Fraud Pattern Visualization** (`src/components/FraudPatterns.tsx`)
-   - Interactive fraud alert cards with risk levels (Critical, High, Medium, Low)
-   - Detailed indicators and actionable recommendations
-   - Click-to-filter affected transactions
+   - Collapsible fraud alert cards with compact headers showing risk icon, name, badge, and transaction count
+   - Expandable details: description, indicators, affected transactions, recommendations
+   - Risk levels (Critical, High, Medium, Low) with click-to-filter functionality
 
 3. **Data Table** (`src/components/DataTable.tsx`)
    - Sortable columns for all transaction fields

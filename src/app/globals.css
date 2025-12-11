@@ -5,12 +5,12 @@
 @tailwind utilities;
 
 @layer base {
-  /* Root dark theme */
+  /* Root dark theme - slate blue variant */
   :root {
-    --color-space-deep: #050810;
+    --color-space-deep: #0d1526;
     --color-terminal-glow: rgba(77, 195, 255, 0.3);
-    --scrollbar-thumb: #283446;
-    --scrollbar-track: #0c1018;
+    --scrollbar-thumb: #324668;
+    --scrollbar-track: #152036;
   }
 
   /* Base body styling */
@@ -22,8 +22,8 @@
   body {
     @apply bg-space-deep text-text-primary font-sans;
     background-image:
-      linear-gradient(rgba(77, 195, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(77, 195, 255, 0.02) 1px, transparent 1px);
+      linear-gradient(rgba(77, 195, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77, 195, 255, 0.03) 1px, transparent 1px);
     background-size: 32px 32px;
     background-attachment: fixed;
   }
@@ -257,5 +257,20 @@
       rgba(0, 0, 0, 0.03) 4px
     );
     pointer-events: none;
+  }
+
+  /* Accordion collapse/expand utilities */
+  .accordion-content {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease-out;
+  }
+
+  .accordion-content.expanded {
+    grid-template-rows: 1fr;
+  }
+
+  .accordion-inner {
+    overflow: hidden;
   }
 }

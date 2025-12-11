@@ -9,15 +9,15 @@ module.exports = {
     extend: {
       // Mission Control Color System
       colors: {
-        // Background depth layers (space station interior)
+        // Background depth layers (dark slate blue - easier on eyes)
         space: {
-          deep: '#050810',      // Deepest void - body background
-          950: '#080c14',       // Near-void
-          900: '#0c1018',       // Main container
-          800: '#111820',       // Panels/cards
-          700: '#171f2a',       // Interactive surfaces
-          600: '#1e2836',       // Hover states
-          500: '#283446',       // Active states
+          deep: '#0d1526',      // Deep slate - body background
+          950: '#111a2e',       // Near-deep
+          900: '#152036',       // Main container
+          800: '#1a2840',       // Panels/cards
+          700: '#20304a',       // Interactive surfaces
+          600: '#283a58',       // Hover states
+          500: '#324668',       // Active states
         },
 
         // Primary accent - terminal phosphor blue

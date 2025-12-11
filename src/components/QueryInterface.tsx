@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Search, Loader2, Zap, BarChart3, Terminal } from 'lucide-react'
+import { Search, Loader2, Zap, BarChart3, Terminal, ChevronDown } from 'lucide-react'
 
 interface QueryInterfaceProps {
   onQuery: (query: string, processor: 'stripe' | 'paypal' | 'adyen' | 'all', useRealStripe?: boolean) => void
@@ -12,6 +12,7 @@ export default function QueryInterface({ onQuery, loading }: QueryInterfaceProps
   const [query, setQuery] = useState('')
   const [processor, setProcessor] = useState<'stripe' | 'paypal' | 'adyen' | 'all'>('all')
   const [useRealStripe, setUseRealStripe] = useState(false)
+  const [examplesExpanded, setExamplesExpanded] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -138,61 +139,94 @@ export default function QueryInterface({ onQuery, loading }: QueryInterfaceProps
         </div>
       </form>
 
-      {/* Example Queries */}
-      <div className="space-y-4 pt-2">
-        {/* Fraud Detection Queries */}
-        <div className="space-y-3">
-          <div className="flex items-center space-x-2">
-            <Zap className="h-4 w-4 text-risk-critical-text" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-risk-critical-text">
-              Fraud Detection
+      {/* Example Queries Accordion */}
+      <div className="pt-2">
+        {/* Accordion Header */}
+        <button
+          type="button"
+          onClick={() => setExamplesExpanded(!examplesExpanded)}
+          className="w-full flex items-center justify-between px-4 py-3 rounded-lg
+                   bg-space-700/30 border border-border/50 hover:border-border
+                   hover:bg-space-700/50 transition-all duration-200 group"
+        >
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              <Zap className="h-4 w-4 text-risk-critical-text/70" />
+              <BarChart3 className="h-4 w-4 text-terminal-300/70" />
+            </div>
+            <span className="text-sm font-medium text-text-secondary group-hover:text-text-primary transition-colors">
+              Example Queries
+            </span>
+            <span className="text-xs text-text-tertiary">
+              {fraudDetectionQueries.length + generalQueries.length} templates
             </span>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {fraudDetectionQueries.map((example, index) => (
-              <button
-                key={`fraud-${index}`}
-                onClick={() => !loading && setQuery(example)}
-                className="text-left text-sm px-3 py-2.5 rounded-lg
-                         bg-risk-critical-bg/50 border border-risk-critical-border/50
-                         text-risk-critical-text/80 hover:text-risk-critical-text
-                         hover:bg-risk-critical-bg hover:border-risk-critical-border
-                         hover:shadow-glow-critical/30
-                         disabled:opacity-50 disabled:cursor-not-allowed
-                         transition-all duration-200"
-                disabled={loading}
-              >
-                <span className="line-clamp-1">{example}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+          <ChevronDown
+            className={`h-4 w-4 text-text-tertiary group-hover:text-text-secondary transition-all duration-300
+                       ${examplesExpanded ? 'rotate-180' : ''}`}
+          />
+        </button>
 
-        {/* General Analysis Queries */}
-        <div className="space-y-3">
-          <div className="flex items-center space-x-2">
-            <BarChart3 className="h-4 w-4 text-terminal-300" />
-            <span className="text-xs font-semibold uppercase tracking-wider text-terminal-300">
-              General Analysis
-            </span>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {generalQueries.map((example, index) => (
-              <button
-                key={`general-${index}`}
-                onClick={() => !loading && setQuery(example)}
-                className="text-left text-sm px-3 py-2.5 rounded-lg
-                         bg-space-700/50 border border-border/50
-                         text-text-secondary hover:text-terminal-300
-                         hover:bg-space-700 hover:border-terminal-400/30
-                         hover:shadow-glow-sm
-                         disabled:opacity-50 disabled:cursor-not-allowed
-                         transition-all duration-200"
-                disabled={loading}
-              >
-                <span className="line-clamp-1">{example}</span>
-              </button>
-            ))}
+        {/* Accordion Content */}
+        <div className={`accordion-content ${examplesExpanded ? 'expanded' : ''}`}>
+          <div className="accordion-inner">
+            <div className="space-y-4 pt-4">
+              {/* Fraud Detection Queries */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-4 w-4 text-risk-critical-text" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-risk-critical-text">
+                    Fraud Detection
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {fraudDetectionQueries.map((example, index) => (
+                    <button
+                      key={`fraud-${index}`}
+                      onClick={() => !loading && setQuery(example)}
+                      className="text-left text-sm px-3 py-2.5 rounded-lg
+                               bg-risk-critical-bg/50 border border-risk-critical-border/50
+                               text-risk-critical-text/80 hover:text-risk-critical-text
+                               hover:bg-risk-critical-bg hover:border-risk-critical-border
+                               hover:shadow-glow-critical/30
+                               disabled:opacity-50 disabled:cursor-not-allowed
+                               transition-all duration-200"
+                      disabled={loading}
+                    >
+                      <span className="line-clamp-1">{example}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* General Analysis Queries */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <BarChart3 className="h-4 w-4 text-terminal-300" />
+                  <span className="text-xs font-semibold uppercase tracking-wider text-terminal-300">
+                    General Analysis
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {generalQueries.map((example, index) => (
+                    <button
+                      key={`general-${index}`}
+                      onClick={() => !loading && setQuery(example)}
+                      className="text-left text-sm px-3 py-2.5 rounded-lg
+                               bg-space-700/50 border border-border/50
+                               text-text-secondary hover:text-terminal-300
+                               hover:bg-space-700 hover:border-terminal-400/30
+                               hover:shadow-glow-sm
+                               disabled:opacity-50 disabled:cursor-not-allowed
+                               transition-all duration-200"
+                      disabled={loading}
+                    >
+                      <span className="line-clamp-1">{example}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

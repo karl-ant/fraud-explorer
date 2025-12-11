@@ -1,6 +1,7 @@
 'use client'
 
-import { AlertTriangle, Shield, AlertCircle, Info, ChevronRight, Target, Crosshair } from 'lucide-react'
+import { useState } from 'react'
+import { AlertTriangle, Shield, AlertCircle, Info, ChevronRight, ChevronDown, Target, Crosshair } from 'lucide-react'
 import { FraudPattern } from '@/types'
 
 interface FraudPatternsProps {
@@ -9,6 +10,19 @@ interface FraudPatternsProps {
 }
 
 export default function FraudPatterns({ patterns, onFilterTransactions }: FraudPatternsProps) {
+  const [expandedPatterns, setExpandedPatterns] = useState<Set<number>>(new Set())
+
+  const togglePattern = (index: number) => {
+    setExpandedPatterns(prev => {
+      const next = new Set(prev)
+      if (next.has(index)) {
+        next.delete(index)
+      } else {
+        next.add(index)
+      }
+      return next
+    })
+  }
 
   const getRiskConfig = (riskLevel: string) => {
     switch (riskLevel) {
@@ -93,103 +107,126 @@ export default function FraudPatterns({ patterns, onFilterTransactions }: FraudP
       </div>
 
       {/* Pattern Cards Grid */}
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         {sortedPatterns.map((pattern, index) => {
           const config = getRiskConfig(pattern.risk_level)
+          const isExpanded = expandedPatterns.has(index)
 
           return (
             <div
               key={index}
-              className={`rounded-lg p-5 ${config.cardClass} ${config.glowClass} transition-all duration-300`}
+              className={`rounded-lg overflow-hidden ${config.cardClass} ${isExpanded ? config.glowClass : ''} transition-all duration-300`}
             >
-              {/* Header */}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start space-x-3">
-                  <div className={`${config.iconClass} mt-0.5`}>
+              {/* Clickable Header */}
+              <button
+                onClick={() => togglePattern(index)}
+                className="w-full p-4 flex items-center justify-between text-left group"
+              >
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  <div className={`${config.iconClass} flex-shrink-0`}>
                     {config.icon}
                   </div>
-                  <div className="space-y-2">
-                    <h4 className={`font-display font-bold text-lg uppercase tracking-wide ${config.titleClass}`}>
-                      {formatPatternType(pattern.type)}
-                    </h4>
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wider ${config.badgeClass}`}>
-                      {pattern.risk_level} Risk
-                    </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center space-x-3 flex-wrap gap-y-1">
+                      <h4 className={`font-display font-bold uppercase tracking-wide ${config.titleClass}`}>
+                        {formatPatternType(pattern.type)}
+                      </h4>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wider ${config.badgeClass}`}>
+                        {pattern.risk_level}
+                      </span>
+                      <span className={`text-xs font-mono ${config.textClass}`}>
+                        {pattern.affected_transactions.length} txn{pattern.affected_transactions.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+                <ChevronDown
+                  className={`h-5 w-5 flex-shrink-0 ml-3 ${config.iconClass} transition-transform duration-300
+                             ${isExpanded ? 'rotate-180' : ''}`}
+                />
+              </button>
 
-              {/* Description */}
-              <p className={`mb-5 text-sm leading-relaxed ${config.textClass}`}>
-                {pattern.description}
-              </p>
+              {/* Collapsible Content */}
+              <div className={`accordion-content ${isExpanded ? 'expanded' : ''}`}>
+                <div className="accordion-inner">
+                  <div className="px-4 pb-4 space-y-4">
+                    {/* Description */}
+                    <p className={`text-sm leading-relaxed ${config.textClass}`}>
+                      {pattern.description}
+                    </p>
 
-              {/* Details Grid */}
-              <div className="grid md:grid-cols-2 gap-4 mb-5">
-                {/* Indicators */}
-                <div className="space-y-2">
-                  <h5 className={`text-xs font-semibold uppercase tracking-wider ${config.titleClass}`}>
-                    Indicators
-                  </h5>
-                  <ul className="space-y-1.5">
-                    {pattern.indicators.map((indicator, i) => (
-                      <li key={i} className={`flex items-start space-x-2 text-sm ${config.textClass}`}>
-                        <Crosshair className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${config.iconClass}`} />
-                        <span>{indicator}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                    {/* Details Grid */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {/* Indicators */}
+                      <div className="space-y-2">
+                        <h5 className={`text-xs font-semibold uppercase tracking-wider ${config.titleClass}`}>
+                          Indicators
+                        </h5>
+                        <ul className="space-y-1.5">
+                          {pattern.indicators.map((indicator, i) => (
+                            <li key={i} className={`flex items-start space-x-2 text-sm ${config.textClass}`}>
+                              <Crosshair className={`h-3.5 w-3.5 mt-0.5 flex-shrink-0 ${config.iconClass}`} />
+                              <span>{indicator}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
 
-                {/* Affected Transactions */}
-                <div className="space-y-2">
-                  <h5 className={`text-xs font-semibold uppercase tracking-wider ${config.titleClass}`}>
-                    Affected Transactions
-                  </h5>
-                  <button
-                    onClick={() => onFilterTransactions?.(pattern.affected_transactions)}
-                    className={`w-full p-3 rounded-lg bg-space-800/50 border border-border/50
-                              ${config.buttonHover}
-                              disabled:opacity-50 disabled:cursor-not-allowed
-                              transition-all duration-200 text-left group`}
-                    disabled={!onFilterTransactions}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className={`font-mono text-sm font-medium ${config.titleClass}`}>
-                        {pattern.affected_transactions.length}
-                        <span className="text-text-secondary ml-1">
-                          {pattern.affected_transactions.length === 1 ? 'transaction' : 'transactions'}
-                        </span>
-                      </span>
-                      {onFilterTransactions && (
-                        <span className="flex items-center space-x-1 text-xs font-medium text-terminal-300 group-hover:text-terminal-200 transition-colors">
-                          <span>Filter</span>
-                          <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-                        </span>
-                      )}
+                      {/* Affected Transactions */}
+                      <div className="space-y-2">
+                        <h5 className={`text-xs font-semibold uppercase tracking-wider ${config.titleClass}`}>
+                          Affected Transactions
+                        </h5>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onFilterTransactions?.(pattern.affected_transactions)
+                          }}
+                          className={`w-full p-3 rounded-lg bg-space-800/50 border border-border/50
+                                    ${config.buttonHover}
+                                    disabled:opacity-50 disabled:cursor-not-allowed
+                                    transition-all duration-200 text-left group`}
+                          disabled={!onFilterTransactions}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className={`font-mono text-sm font-medium ${config.titleClass}`}>
+                              {pattern.affected_transactions.length}
+                              <span className="text-text-secondary ml-1">
+                                {pattern.affected_transactions.length === 1 ? 'transaction' : 'transactions'}
+                              </span>
+                            </span>
+                            {onFilterTransactions && (
+                              <span className="flex items-center space-x-1 text-xs font-medium text-terminal-300 group-hover:text-terminal-200 transition-colors">
+                                <span>Filter</span>
+                                <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                              </span>
+                            )}
+                          </div>
+                          <div className="font-mono text-xs text-text-tertiary truncate">
+                            {pattern.affected_transactions.length <= 3 ? (
+                              pattern.affected_transactions.map(id => id.substring(0, 12) + '...').join(', ')
+                            ) : (
+                              <>
+                                {pattern.affected_transactions.slice(0, 2).map(id => id.substring(0, 12) + '...').join(', ')}
+                                <span className="text-text-secondary"> +{pattern.affected_transactions.length - 2} more</span>
+                              </>
+                            )}
+                          </div>
+                        </button>
+                      </div>
                     </div>
-                    <div className="font-mono text-xs text-text-tertiary truncate">
-                      {pattern.affected_transactions.length <= 3 ? (
-                        pattern.affected_transactions.map(id => id.substring(0, 12) + '...').join(', ')
-                      ) : (
-                        <>
-                          {pattern.affected_transactions.slice(0, 2).map(id => id.substring(0, 12) + '...').join(', ')}
-                          <span className="text-text-secondary"> +{pattern.affected_transactions.length - 2} more</span>
-                        </>
-                      )}
-                    </div>
-                  </button>
-                </div>
-              </div>
 
-              {/* Recommendation */}
-              <div className={`border-t ${config.accentClass} pt-4`}>
-                <h5 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${config.titleClass}`}>
-                  Recommended Action
-                </h5>
-                <p className={`text-sm font-medium ${config.textClass}`}>
-                  {pattern.recommendation}
-                </p>
+                    {/* Recommendation */}
+                    <div className={`border-t ${config.accentClass} pt-4`}>
+                      <h5 className={`text-xs font-semibold uppercase tracking-wider mb-2 ${config.titleClass}`}>
+                        Recommended Action
+                      </h5>
+                      <p className={`text-sm font-medium ${config.textClass}`}>
+                        {pattern.recommendation}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           )
