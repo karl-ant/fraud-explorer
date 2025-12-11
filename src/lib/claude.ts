@@ -60,7 +60,16 @@ REMEMBER: Return ONLY the JSON object, no markdown, no explanations, no code blo
     const content = response.content[0]
     if (content.type === 'text') {
       try {
-        const parsed = JSON.parse(content.text)
+        // Strip markdown code blocks if present (```json ... ```)
+        let jsonText = content.text.trim()
+        if (jsonText.startsWith('```')) {
+          // Remove opening ```json or ```
+          jsonText = jsonText.replace(/^```(?:json)?\s*\n?/, '')
+          // Remove closing ```
+          jsonText = jsonText.replace(/\n?```\s*$/, '')
+        }
+
+        const parsed = JSON.parse(jsonText)
 
         // Validate structure - filters and intent are optional but should be correct type if present
         if (parsed.filters !== undefined && (parsed.filters === null || typeof parsed.filters !== 'object')) {
