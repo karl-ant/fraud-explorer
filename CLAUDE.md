@@ -1,15 +1,22 @@
 # Fraud Explorer
 
-> **Version**: 1.1.0 | **Last Updated**: 2025-12-11
+> **Version**: 1.2.0 | **Last Updated**: 2025-12-11
 
 ## Critical Instructions
 - Do not use the public npm registry, only the internal registry
 - Always run the app on port 3000 (default)
 
-## Recent Changes (v1.1.0)
-- **Theme Update**: Lightened dark theme from near-black to dark slate blue for better readability
-- **Accordion UI**: Example queries now collapsed by default with expandable accordion
-- **Collapsible Fraud Cards**: Fraud pattern cards now show compact headers, expand on click
+## Recent Changes (v1.2.0)
+- **Multi-Page Navigation**: Generator moved to dedicated `/generator` route with tab navigation
+- **Transaction Context**: React Context with sessionStorage persistence for cross-page state
+- **Live Validation**: Generator shows real-time validation (totals must equal 100%)
+- **Improved Generator UI**: Always expanded, 3-column fraud sliders, 4-column status distribution
+- **Race Condition Fix**: Auto-display effect now properly handles loading states
+
+### Previous (v1.1.0)
+- Theme Update: Lightened dark theme from near-black to dark slate blue
+- Accordion UI: Example queries collapsed by default
+- Collapsible Fraud Cards: Compact headers, expand on click
 
 ## Environment Variables (.env.local)
 ```
@@ -34,6 +41,9 @@ npm run lint    # Run ESLint
 - **Mock transaction generator**: `src/lib/mock-generator.ts`
 - **Types**: `src/types/index.ts`
 - **Claude integration**: `src/lib/claude.ts`
+- **Transaction context**: `src/context/TransactionContext.tsx`
+- **Navigation**: `src/components/Navigation.tsx`
+- **Generator page**: `src/app/generator/page.tsx`
 
 ## Stripe MCP Integration
 
@@ -73,22 +83,51 @@ The app uses Claude to parse natural language queries into structured filters.
 - **Error Handling**: API errors are propagated to users; parsing errors trigger regex fallback
 - **Amounts**: All amounts are in cents (e.g., $10 = 1000)
 
+## Multi-Page Navigation
+
+The app uses Next.js App Router with two pages and shared state via React Context.
+
+### Architecture
+```
+TransactionProvider (layout.tsx)
+├── Navigation (header tabs: Query | Generator)
+├── / (Query page) - consumes transactions from context
+└── /generator - writes transactions to context
+```
+
+### Transaction Context (`src/context/TransactionContext.tsx`)
+- **State**: `transactions`, `fraudPatterns`, `hasGeneratedData`
+- **Methods**: `setGeneratedTransactions()`, `clearTransactions()`
+- **Persistence**: sessionStorage (survives refresh, clears on tab close)
+- **Auto-analysis**: Fraud patterns computed automatically when transactions set
+
+### Data Flow
+1. User navigates to `/generator`
+2. Configures and generates mock transactions
+3. Transactions saved to context + sessionStorage
+4. User clicks "View in Query" → navigates to `/`
+5. Query page auto-displays generated transactions
+6. API queries can override context data
+
 ## Mock Transaction Generator
 
-`src/lib/mock-generator.ts` and `src/components/MockTransactionGenerator.tsx` provide a UI for generating test data.
+Located at `/generator` route. Uses `src/lib/mock-generator.ts` and `src/components/MockTransactionGenerator.tsx`.
 
 ### Features
 - Configurable transaction count (1-10,000)
 - Processor selection (Stripe, PayPal, Adyen)
 - Date range selection
-- Fraud pattern mix (8 patterns + legitimate)
-- Status distribution (succeeded, failed, pending, canceled)
+- Fraud pattern mix (8 patterns + legitimate) - 3-column layout
+- Status distribution (succeeded, failed, pending, canceled) - 4-column layout
+- Live validation indicators showing totals
+- SessionStorage persistence across page refreshes
 
 ### Validation
-- Fraud mix must sum to 100%
-- Status distribution must sum to 100%
+- Fraud mix must sum to 100% (live indicator turns red if invalid)
+- Status distribution must sum to 100% (live indicator turns red if invalid)
 - All percentages must be 0-100
 - Start date must be before end date
+- Generate button disabled until all validation passes
 
 ## Common Development Tasks
 
@@ -140,5 +179,7 @@ Collapsible sections use CSS grid-based animations:
 ```
 
 ### Key UI Components
+- **Navigation**: Header with "Query" and "Generator" tabs, shows transaction count badge when data loaded
 - **QueryInterface**: Example queries collapsed by default, toggle via accordion header
 - **FraudPatterns**: Pattern cards show compact headers (icon, name, badge, count), expand to show full details
+- **MockTransactionGenerator**: Full-page form with live validation, 3-col fraud mix, 4-col status distribution

@@ -66,11 +66,13 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
 
 ### Mock Transaction Generator
 Generate custom test data to explore fraud detection:
-1. Click "Show Config" on the Mock Transaction Generator panel
-2. Adjust transaction count, processor, date range
-3. Set fraud pattern percentages (e.g., 20% card testing, 10% velocity fraud)
-4. Set status distribution (e.g., 70% succeeded, 20% failed)
+1. Click the **Generator** tab in the navigation header
+2. Adjust transaction count (1-10,000), processor, and date range
+3. Set fraud pattern percentages using the sliders (must sum to 100%)
+4. Set status distribution (must sum to 100%)
 5. Click "Generate Transactions"
+6. Click "View in Query" to analyze the generated data
+7. Data persists across page refreshes (stored in sessionStorage)
 
 ### Fraud Detection Queries
 Try these natural language queries to see fraud detection in action:
@@ -106,39 +108,50 @@ Try these natural language queries to see fraud detection in action:
 
 ### Key Components
 
-1. **Query Interface** (`src/components/QueryInterface.tsx`)
+1. **Navigation** (`src/components/Navigation.tsx`)
+   - Tab-based navigation between Query and Generator pages
+   - Transaction count badge when data is loaded
+   - Consistent "Mission Control" header branding
+
+2. **Transaction Context** (`src/context/TransactionContext.tsx`)
+   - Shared state management across pages
+   - SessionStorage persistence (survives page refresh)
+   - Auto-computes fraud patterns when transactions change
+
+3. **Query Interface** (`src/components/QueryInterface.tsx`)
    - Natural language input with processor selection (Stripe, PayPal, or All)
    - Collapsible example queries accordion (fraud detection + general analysis templates)
    - Real-time loading states and error handling
 
-2. **Fraud Pattern Visualization** (`src/components/FraudPatterns.tsx`)
+4. **Fraud Pattern Visualization** (`src/components/FraudPatterns.tsx`)
    - Collapsible fraud alert cards with compact headers showing risk icon, name, badge, and transaction count
    - Expandable details: description, indicators, affected transactions, recommendations
    - Risk levels (Critical, High, Medium, Low) with click-to-filter functionality
 
-3. **Data Table** (`src/components/DataTable.tsx`)
+5. **Data Table** (`src/components/DataTable.tsx`)
    - Sortable columns for all transaction fields
    - Status indicators with color coding
    - Responsive design with proper data formatting
 
-4. **Fraud Detector** (`src/lib/fraud-detector.ts`)
+6. **Fraud Detector** (`src/lib/fraud-detector.ts`)
    - 8 independent fraud detection algorithms
    - Risk scoring and pattern grouping
    - Transaction clustering for related suspicious activities
 
-5. **Claude Integration** (`src/lib/claude.ts`)
+7. **Claude Integration** (`src/lib/claude.ts`)
    - Natural language query processing with structured JSON responses
    - Intent extraction and filter generation
    - Automatic markdown stripping and validation
    - Fallback to regex parsing on errors
 
-6. **Mock Transaction Generator** (`src/components/MockTransactionGenerator.tsx`)
-   - Configurable fraud pattern mixing (8 patterns + legitimate)
-   - Adjustable status distribution (succeeded, failed, pending, canceled)
-   - Date range selection
-   - Support for all 3 processors
+8. **Mock Transaction Generator** (`src/components/MockTransactionGenerator.tsx`)
+   - Dedicated `/generator` page with full-width layout
+   - Configurable fraud pattern mixing (8 patterns + legitimate) - 3-column layout
+   - Adjustable status distribution (4-column layout)
+   - Live validation with real-time total indicators
+   - SessionStorage persistence for data across refreshes
 
-7. **Payment Processor Clients**
+9. **Payment Processor Clients**
    - **Stripe MCP** (`src/lib/stripe-mcp.ts`): MCP-based Stripe integration with mock data
    - **PayPal Mock** (`src/lib/paypal-mock.ts`): 100+ diverse transactions with realistic fraud patterns
    - **Adyen Mock** (`src/lib/adyen-mock.ts`): 60+ transactions with EU-focused fraud patterns (3DS failures, cross-border)
@@ -174,10 +187,14 @@ For production deployment:
 src/
 ├── app/              # Next.js app directory
 │   ├── api/          # API routes
+│   ├── generator/    # Generator page route
+│   ├── page.tsx      # Query page (home)
+│   ├── layout.tsx    # Root layout with providers
 │   └── globals.css   # Global styles
 ├── components/       # React components
-├── lib/             # Utility libraries
-└── types/           # TypeScript type definitions
+├── context/          # React Context providers
+├── lib/              # Utility libraries
+└── types/            # TypeScript type definitions
 ```
 
 ### Adding New Features

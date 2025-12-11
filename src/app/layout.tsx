@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { TransactionProvider } from '@/context/TransactionContext'
+import Navigation from '@/components/Navigation'
 
 export const metadata: Metadata = {
   title: 'Fraud Explorer | Mission Control',
@@ -14,9 +16,12 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen">
-        <main className="container mx-auto px-4 py-6 max-w-[1600px]">
-          {children}
-        </main>
+        <TransactionProvider>
+          <main className="container mx-auto px-4 py-6 max-w-[1600px]">
+            <Navigation />
+            {children}
+          </main>
+        </TransactionProvider>
       </body>
     </html>
   )

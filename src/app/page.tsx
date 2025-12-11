@@ -1,22 +1,38 @@
 'use client'
 
-import { useState } from 'react'
-import { Radar, Shield, AlertTriangle, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Shield, AlertTriangle, X, Database } from 'lucide-react'
 import QueryInterface from '@/components/QueryInterface'
 import DataTable from '@/components/DataTable'
 import FraudPatterns from '@/components/FraudPatterns'
-import MockTransactionGenerator from '@/components/MockTransactionGenerator'
-import { QueryResponse, TransactionData } from '@/types'
-import { FraudDetector } from '@/lib/fraud-detector'
+import { useTransactions } from '@/context/TransactionContext'
+import { QueryResponse } from '@/types'
 
 export default function Home() {
+  const { transactions: contextTransactions, fraudPatterns: contextFraudPatterns, hasGeneratedData } = useTransactions()
+
   const [response, setResponse] = useState<QueryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [filteredTransactionIds, setFilteredTransactionIds] = useState<string[] | null>(null)
+  const [showingGeneratedData, setShowingGeneratedData] = useState(false)
+
+  // Auto-display generated data when available and no API query has been made
+  useEffect(() => {
+    // Only auto-display if: we have data, no response loaded, not loading, and not already showing generated data
+    if (hasGeneratedData && !response && !loading && !showingGeneratedData) {
+      setResponse({
+        data: contextTransactions,
+        summary: `Displaying ${contextTransactions.length.toLocaleString()} generated mock transactions with ${contextFraudPatterns.length} fraud patterns detected`,
+        fraud_patterns: contextFraudPatterns
+      })
+      setShowingGeneratedData(true)
+    }
+  }, [hasGeneratedData, contextTransactions, contextFraudPatterns, response, loading, showingGeneratedData])
 
   const handleQuery = async (query: string, processor: 'stripe' | 'paypal' | 'adyen' | 'all' = 'all', useRealStripe = false) => {
     setLoading(true)
     setFilteredTransactionIds(null)
+    setShowingGeneratedData(false)
     try {
       const res = await fetch('/api/query', {
         method: 'POST',
@@ -35,15 +51,16 @@ export default function Home() {
     }
   }
 
-  const handleMockGenerated = (transactions: TransactionData[]) => {
-    // Display generated transactions without making API call
-    const fraudPatterns = FraudDetector.analyzeFraudPatterns(transactions)
-    setResponse({
-      data: transactions,
-      summary: `Generated ${transactions.length} mock transactions with ${fraudPatterns.length} fraud patterns detected`,
-      fraud_patterns: fraudPatterns
-    })
-    setFilteredTransactionIds(null)
+  const handleShowGeneratedData = () => {
+    if (hasGeneratedData) {
+      setResponse({
+        data: contextTransactions,
+        summary: `Displaying ${contextTransactions.length.toLocaleString()} generated mock transactions with ${contextFraudPatterns.length} fraud patterns detected`,
+        fraud_patterns: contextFraudPatterns
+      })
+      setShowingGeneratedData(true)
+      setFilteredTransactionIds(null)
+    }
   }
 
   const handleFilterTransactions = (transactionIds: string[]) => {
@@ -70,37 +87,32 @@ export default function Home() {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Mission Control Header */}
-      <header className="text-center space-y-4 py-6">
-        <div className="flex items-center justify-center space-x-4">
-          {/* Animated radar icon */}
-          <div className="relative">
-            <Radar className="h-10 w-10 text-terminal-300 animate-pulse-slow" />
-            <div className="absolute inset-0 h-10 w-10 bg-terminal-300/20 rounded-full blur-xl animate-glow-breathe" />
-          </div>
-
-          <h1 className="text-4xl font-display font-bold uppercase tracking-wider text-text-primary text-shadow-glow">
-            Fraud Explorer
-          </h1>
-        </div>
-
-        <p className="text-text-secondary max-w-2xl mx-auto font-sans">
-          Unified fraud detection across payment processors.
-          Query transaction patterns with natural language analysis.
-        </p>
-      </header>
-
       {/* Main Control Panel */}
       <div className="panel p-6 space-y-6">
         <QueryInterface onQuery={handleQuery} loading={loading} />
-      </div>
 
-      {/* Mock Transaction Generator */}
-      <MockTransactionGenerator onTransactionsGenerated={handleMockGenerated} />
+        {/* Generated Data Quick Access */}
+        {hasGeneratedData && !showingGeneratedData && (
+          <div className="flex items-center justify-between p-3 bg-terminal-900/30 border border-terminal-400/30 rounded-lg">
+            <div className="flex items-center space-x-2">
+              <Database className="h-4 w-4 text-terminal-400" />
+              <span className="text-sm text-text-secondary">
+                <span className="text-terminal-300 font-medium">{contextTransactions.length.toLocaleString()}</span> generated transactions available
+              </span>
+            </div>
+            <button
+              onClick={handleShowGeneratedData}
+              className="text-sm text-terminal-300 hover:text-terminal-200 font-medium transition-colors"
+            >
+              Show generated data
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Results Panel */}
       {response && (
-        <div className="panel p-6 space-y-6">{response && (
+        <div className="panel p-6 space-y-6">
           <div className="space-y-6 animate-slide-up">
             {/* Analysis Summary */}
             {response.summary && (
@@ -167,7 +179,6 @@ export default function Home() {
               <DataTable data={getDisplayedTransactions()} />
             )}
           </div>
-        )}
         </div>
       )}
 
