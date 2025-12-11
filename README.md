@@ -13,9 +13,10 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
 ### Core Capabilities
 - **Natural Language Queries**: Ask questions about transaction data in plain English powered by Claude 3.5 Sonnet
 - **Advanced Fraud Detection**: 8 sophisticated fraud pattern detection algorithms analyzing transactions in real-time
-- **Multi-Processor Support**: Unified view across Stripe and PayPal (with mock data for demo)
+- **Multi-Processor Support**: Unified view across Stripe, PayPal, and Adyen (with mock data for demo)
+- **Mock Transaction Generator**: Create custom test datasets with configurable fraud patterns and status distributions
 - **Interactive Visualizations**: Sortable transaction tables with fraud pattern cards showing risk levels
-- **100+ Mock Transactions**: Diverse dataset with realistic fraud patterns for demonstration
+- **100+ Mock Transactions**: Diverse dataset with realistic fraud patterns across all 3 processors
 
 ### Fraud Detection Algorithms
 1. **Card Testing Detection** - Identifies card validation attacks (multiple small failed transactions)
@@ -62,6 +63,14 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
 
 ## Usage Examples
 
+### Mock Transaction Generator
+Generate custom test data to explore fraud detection:
+1. Click "Show Config" on the Mock Transaction Generator panel
+2. Adjust transaction count, processor, date range
+3. Set fraud pattern percentages (e.g., 20% card testing, 10% velocity fraud)
+4. Set status distribution (e.g., 70% succeeded, 20% failed)
+5. Click "Generate Transactions"
+
 ### Fraud Detection Queries
 Try these natural language queries to see fraud detection in action:
 
@@ -71,6 +80,7 @@ Try these natural language queries to see fraud detection in action:
 - "Detect cryptocurrency fraud patterns"
 - "Show velocity fraud attempts in PayPal"
 - "Find retry attack patterns and card cracking attempts"
+- "Find failed Adyen transactions over $1000 from Nigeria last week"
 
 **Risk Analysis:**
 - "Find high-risk international transactions over $5000"
@@ -87,10 +97,11 @@ Try these natural language queries to see fraud detection in action:
 
 ### Tech Stack
 - **Frontend**: Next.js 14 with React, TypeScript, and Tailwind CSS
-- **AI/ML**: Claude 3.5 Sonnet via Anthropic SDK
-- **Data Sources**: Stripe MCP + PayPal Mock Client
+- **AI/ML**: Claude 3.5 Sonnet (Haiku 4.5) via Anthropic SDK with structured JSON responses
+- **Data Sources**: Stripe MCP + PayPal Mock + Adyen Mock clients
 - **Fraud Detection**: Custom pattern analysis algorithms
 - **UI Components**: Lucide React for icons
+- **Test Data**: Configurable mock transaction generator
 
 ### Key Components
 
@@ -114,13 +125,21 @@ Try these natural language queries to see fraud detection in action:
    - Transaction clustering for related suspicious activities
 
 5. **Claude Integration** (`src/lib/claude.ts`)
-   - Natural language query processing
+   - Natural language query processing with structured JSON responses
    - Intent extraction and filter generation
-   - Context-aware analysis
+   - Automatic markdown stripping and validation
+   - Fallback to regex parsing on errors
 
-6. **Payment Processor Clients**
+6. **Mock Transaction Generator** (`src/components/MockTransactionGenerator.tsx`)
+   - Configurable fraud pattern mixing (8 patterns + legitimate)
+   - Adjustable status distribution (succeeded, failed, pending, canceled)
+   - Date range selection
+   - Support for all 3 processors
+
+7. **Payment Processor Clients**
    - **Stripe MCP** (`src/lib/stripe-mcp.ts`): MCP-based Stripe integration with mock data
    - **PayPal Mock** (`src/lib/paypal-mock.ts`): 100+ diverse transactions with realistic fraud patterns
+   - **Adyen Mock** (`src/lib/adyen-mock.ts`): 60+ transactions with EU-focused fraud patterns (3DS failures, cross-border)
 
 ## Environment Setup
 
@@ -182,16 +201,22 @@ For issues with:
 
 ## Mock Data
 
-The application includes 100+ carefully crafted mock transactions demonstrating:
-- **Geographic Diversity**: US, Canada, Europe, and high-risk countries (Nigeria, Russia, Pakistan)
-- **Currency Variety**: USD, EUR, GBP, CAD
-- **Realistic Amounts**: From $1.25 coffee purchases to $20K business transactions
+The application includes 160+ carefully crafted mock transactions across 3 processors demonstrating:
+- **Geographic Diversity**: US, Canada, Europe, and high-risk countries (Nigeria, Russia, Pakistan, Indonesia)
+- **Currency Variety**: USD, EUR, GBP, CAD, CHF
+- **Realistic Amounts**: From $0.50 card tests to $25K business transactions
+- **Processor-Specific Patterns**:
+  - **Stripe**: Card testing, high-value international, crypto fraud
+  - **PayPal**: Velocity fraud, retry attacks, round numbers
+  - **Adyen**: 3DS authentication failures, EU cross-border, account takeover
 - **Authentic Fraud Patterns**: Based on real-world fraud scenarios including:
-  - 15 rapid small transactions (card testing)
+  - 15-30 rapid small transactions (card testing)
+  - 3DS authentication failures (Adyen-specific)
   - High-value international transfers ($8.5K EUR, $12K GBP)
-  - Round number patterns ($5K, $10K, $20K)
+  - Round number patterns ($5K, $10K, $20K, $25K)
   - Off-hours activity (3 AM transactions from high-risk countries)
   - Retry attacks (8 failures followed by 1 success)
+  - Account takeover attempts (6+ failed logins)
   - Cryptocurrency exchanges ($5K-$10K)
 
 ## Next Steps
@@ -201,7 +226,8 @@ This MVP demonstrates comprehensive fraud detection capabilities. For production
 1. **Real Data Integration**:
    - Connect to actual Stripe MCP server
    - Add real PayPal API integration
-   - Support additional processors (Square, Adyen, etc.)
+   - Add real Adyen API integration
+   - Support additional processors (Square, Braintree, etc.)
 
 2. **Enhanced Fraud Detection**:
    - Machine learning models for anomaly detection

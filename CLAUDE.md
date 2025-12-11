@@ -19,8 +19,11 @@ npm run lint    # Run ESLint
 ## Key Entry Points
 - **API endpoint**: `src/app/api/query/route.ts`
 - **Fraud detection**: `src/lib/fraud-detector.ts`
-- **Stripe MCP client**: `src/lib/stripe-mcp.ts`
-- **PayPal mock client**: `src/lib/paypal-mock.ts`
+- **Payment processor clients**:
+  - **Stripe MCP client**: `src/lib/stripe-mcp.ts`
+  - **PayPal mock client**: `src/lib/paypal-mock.ts`
+  - **Adyen mock client**: `src/lib/adyen-mock.ts`
+- **Mock transaction generator**: `src/lib/mock-generator.ts`
 - **Types**: `src/types/index.ts`
 - **Claude integration**: `src/lib/claude.ts`
 
@@ -45,6 +48,40 @@ Pass `useRealStripe: true` in API requests to `/api/query`:
 - Succeeded: `payment_intents:status:"succeeded"`
 - Pending: `payment_intents:status:"requires_confirmation" OR payment_intents:status:"requires_action"`
 
+## Claude Query Processing
+
+The app uses Claude to parse natural language queries into structured filters.
+
+### Query Flow
+1. User enters natural language query (e.g., "failed Adyen transactions over $1000")
+2. `src/lib/claude.ts` sends query to Claude with structured prompt
+3. Claude returns JSON with filters, intent, and explanation
+4. `src/app/api/query/route.ts` applies filters to fetch transactions
+5. Falls back to regex parsing if Claude response is invalid
+
+### Important Implementation Details
+- **Markdown Stripping**: Claude responses are automatically stripped of markdown code blocks (` ```json ... ``` `)
+- **Validation**: Responses are validated for structure; defaults are provided for missing fields
+- **Error Handling**: API errors are propagated to users; parsing errors trigger regex fallback
+- **Amounts**: All amounts are in cents (e.g., $10 = 1000)
+
+## Mock Transaction Generator
+
+`src/lib/mock-generator.ts` and `src/components/MockTransactionGenerator.tsx` provide a UI for generating test data.
+
+### Features
+- Configurable transaction count (1-10,000)
+- Processor selection (Stripe, PayPal, Adyen)
+- Date range selection
+- Fraud pattern mix (8 patterns + legitimate)
+- Status distribution (succeeded, failed, pending, canceled)
+
+### Validation
+- Fraud mix must sum to 100%
+- Status distribution must sum to 100%
+- All percentages must be 0-100
+- Start date must be before end date
+
 ## Common Development Tasks
 
 ### Adding New Fraud Patterns
@@ -52,7 +89,28 @@ Pass `useRealStripe: true` in API requests to `/api/query`:
 2. Update types in `src/types/index.ts`
 
 ### Adding New Payment Processors
-1. Create client in `src/lib/[processor]-mock.ts`
-2. Add to API route in `src/app/api/query/route.ts`
+1. Create client in `src/lib/[processor]-mock.ts` following PayPal/Adyen pattern
+2. Add import and instantiation in `src/app/api/query/route.ts`
 3. Add processor option to `src/components/QueryInterface.tsx`
+4. Add badge styling in `src/components/DataTable.tsx`
+5. Update footer in `src/app/page.tsx`
+6. Update types in `src/types/index.ts` to include new processor
+
+**Example:** See `src/lib/adyen-mock.ts` for reference implementation with 8 fraud patterns.
+
+## Troubleshooting
+
+### "Failed to parse AI response"
+- **Cause**: Claude returned non-JSON or malformed JSON
+- **Check**: Server console shows "Claude response preview" with actual response
+- **Solution**: Already handles markdown code blocks; if still failing, check Claude prompt
+
+### "Failed to process query with Claude"
+- **Cause**: API error or authentication issue
+- **Check**: Server console for "Claude API error"
+- **Solution**: Verify ANT_API_KEY is set in .env.local
+
+### Mock Generator Errors
+- **Cause**: Invalid configuration (percentages don't sum to 100%, invalid count, etc.)
+- **Solution**: Check browser console for validation error messages
 - please only run the app on port 3000
