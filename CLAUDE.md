@@ -1,12 +1,19 @@
 # Fraud Explorer
 
-> **Version**: 1.2.0 | **Last Updated**: 2025-12-11
+> **Version**: 1.3.0 | **Last Updated**: 2026-01-12
 
 ## Critical Instructions
 - Do not use the public npm registry, only the internal registry
-- Always run the app on port 3000 (default)
+- Do not use esbuild (blocked by Anthropic policy) - use Jest for testing
+- Always run the app on port 3006
 
-## Recent Changes (v1.2.0)
+## Recent Changes (v1.3.0)
+- **Test Infrastructure**: Jest + ts-jest setup with 229 tests across 6 test files
+- **73% Code Coverage**: Comprehensive tests for all `src/lib/` modules
+- **Test Subagent**: Created `.claude/agents/test.md` for writing Jest tests
+- **Bug Fix**: Fixed hardcoded 'usd' currency in mock-generator.ts (now uses `getCurrency()`)
+
+### Previous (v1.2.0)
 - **Multi-Page Navigation**: Generator moved to dedicated `/generator` route with tab navigation
 - **Transaction Context**: React Context with sessionStorage persistence for cross-page state
 - **Live Validation**: Generator shows real-time validation (totals must equal 100%)
@@ -26,9 +33,12 @@ STRIPE_SECRET_KEY=<your_stripe_secret_key>
 
 ## Commands
 ```bash
-npm run dev     # Start development server
-npm run build   # Production build
-npm run lint    # Run ESLint
+npm run dev           # Start development server
+npm run build         # Production build
+npm run lint          # Run ESLint
+npm test              # Run all tests
+npm run test:watch    # Run tests in watch mode
+npm run test:coverage # Run tests with coverage report
 ```
 
 ## Key Entry Points
@@ -183,3 +193,42 @@ Collapsible sections use CSS grid-based animations:
 - **QueryInterface**: Example queries collapsed by default, toggle via accordion header
 - **FraudPatterns**: Pattern cards show compact headers (icon, name, badge, count), expand to show full details
 - **MockTransactionGenerator**: Full-page form with live validation, 3-col fraud mix, 4-col status distribution
+
+## Testing
+
+### Test Framework
+Uses Jest with ts-jest for TypeScript support. Configuration in `jest.config.js`.
+
+### Running Tests
+```bash
+npm test              # Run all tests
+npm run test:watch    # Watch mode for development
+npm run test:coverage # Generate coverage report
+```
+
+### Test Files
+| File | Tests | Description |
+|------|-------|-------------|
+| `error-handler.test.ts` | 17 | AppError class and handleApiError function |
+| `fraud-detector.test.ts` | 36 | 8 fraud detection algorithms |
+| `mock-generator.test.ts` | 42 | Generator validation and transaction generation |
+| `claude.test.ts` | 32 | Query processing, markdown stripping, error handling |
+| `adyen-mock.test.ts` | 73 | Adyen client filtering and fraud patterns |
+| `paypal-mock.test.ts` | 64 | PayPal client filtering and fraud patterns |
+
+### Coverage
+- **Statements**: 73%+
+- **Branches**: 65%+
+- **Functions**: 80%+
+- **Lines**: 73%+
+
+### Test Subagent
+A test-writing subagent is available at `.claude/agents/test.md` for creating new tests. Use it to:
+- Write comprehensive Jest tests for new modules
+- Add edge case coverage to existing tests
+- Mock external dependencies (Anthropic SDK, Date.now, Math.random)
+
+### Notes
+- Some fraud detection timing tests are skipped due to dynamic data generation edge cases
+- Mock clients generate varied data, so tests validate structure rather than exact values
+- `@anthropic-ai/sdk` is mocked in claude.test.ts

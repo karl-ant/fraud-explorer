@@ -60,7 +60,13 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
    npm run dev
    ```
 
-4. **Open your browser** and navigate to `http://localhost:3000`
+4. **Run tests** (optional):
+   ```bash
+   npm test              # Run all 229 tests
+   npm run test:coverage # View coverage report (73%+)
+   ```
+
+5. **Open your browser** and navigate to `http://localhost:3006`
 
 ## Usage Examples
 
@@ -103,6 +109,7 @@ Try these natural language queries to see fraud detection in action:
 - **AI/ML**: Claude 3.5 Sonnet (Haiku 4.5) via Anthropic SDK with structured JSON responses
 - **Data Sources**: Stripe MCP + PayPal Mock + Adyen Mock clients
 - **Fraud Detection**: Custom pattern analysis algorithms
+- **Testing**: Jest + ts-jest with 73%+ code coverage (229 tests)
 - **UI Components**: Lucide React for icons
 - **Test Data**: Configurable mock transaction generator
 
@@ -193,8 +200,12 @@ src/
 │   └── globals.css   # Global styles
 ├── components/       # React components
 ├── context/          # React Context providers
-├── lib/              # Utility libraries
+├── lib/              # Utility libraries (with *.test.ts files)
 └── types/            # TypeScript type definitions
+
+.claude/
+└── agents/
+    └── test.md       # Test-writing subagent definition
 ```
 
 ### Adding New Features
@@ -202,6 +213,21 @@ src/
 1. **New Query Types**: Extend the query parsing logic in `src/app/api/query/route.ts`
 2. **Additional Data Sources**: Create new MCP clients in `src/lib/`
 3. **Enhanced UI**: Add new components in `src/components/`
+
+### Running Tests
+
+```bash
+npm test              # Run all tests
+npm run test:watch    # Watch mode for development
+npm run test:coverage # Generate HTML coverage report
+```
+
+**Test Coverage**: 229 tests across 6 test files covering:
+- Error handling utilities
+- Fraud detection algorithms (8 patterns)
+- Mock transaction generator
+- Claude query processing
+- PayPal and Adyen mock clients
 
 ## Troubleshooting
 
