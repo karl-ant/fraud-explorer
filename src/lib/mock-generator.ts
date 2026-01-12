@@ -176,7 +176,7 @@ export class MockTransactionGenerator {
       transactions.push({
         id: `${this.getProcessorPrefix()}_hrisk_${this.randomId()}`,
         amount: Math.floor(Math.random() * 100000) + 50000, // $500-$1500
-        currency: 'usd',
+        currency: this.getCurrency(),
         status: 'succeeded',
         processor: this.config.processor,
         created: now - Math.floor(Math.random() * 7200),
@@ -259,7 +259,7 @@ export class MockTransactionGenerator {
       transactions.push({
         id: `${this.getProcessorPrefix()}_crypto_${this.randomId()}`,
         amount: Math.floor(Math.random() * 500000) + 300000, // $3k-$8k
-        currency: 'usd',
+        currency: this.getCurrency(),
         status: 'succeeded',
         processor: this.config.processor,
         created: now - Math.floor(Math.random() * 3600),
