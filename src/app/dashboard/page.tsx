@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useCallback } from 'react'
+import { useMemo } from 'react'
 import { BarChart3, DollarSign, Activity, ShieldAlert, Wand2 } from 'lucide-react'
 import Link from 'next/link'
 import { useTransactions } from '@/context/TransactionContext'
+import { useTheme } from '@/context/ThemeContext'
 import StatCard from '@/components/charts/StatCard'
 import DonutChart from '@/components/charts/DonutChart'
 import BarChart from '@/components/charts/BarChart'
@@ -21,7 +22,8 @@ function getCSSVar(name: string): string {
 }
 
 function useChartColors() {
-  return useCallback(() => ({
+  const { theme } = useTheme()
+  return useMemo(() => ({
     status: {
       succeeded: getCSSVar('--chart-success'),
       failed: getCSSVar('--chart-failed'),
@@ -41,12 +43,12 @@ function useChartColors() {
       low: getCSSVar('--chart-risk-low'),
     } as Record<string, string>,
     accent: getCSSVar('--chart-accent'),
-  }), [])
+  }), [theme])
 }
 
 export default function DashboardPage() {
   const { transactions, fraudPatterns, hasGeneratedData } = useTransactions()
-  const getColors = useChartColors()
+  const colors = useChartColors()
 
   const stats = useMemo(() => computeOverviewStats(transactions, fraudPatterns), [transactions, fraudPatterns])
   const statusDist = useMemo(() => computeStatusDistribution(transactions), [transactions])
@@ -71,7 +73,6 @@ export default function DashboardPage() {
   }
 
   const formatDollar = (cents: number) => `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-  const colors = getColors()
 
   return (
     <div className="space-y-6 animate-fade-in">

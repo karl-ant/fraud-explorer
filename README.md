@@ -16,7 +16,9 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
 - **Multi-Processor Support**: Unified view across Stripe, PayPal, and Adyen (with mock data for demo)
 - **Mock Transaction Generator**: Create custom test datasets with configurable fraud patterns and status distributions
 - **Interactive Visualizations**: Sortable transaction tables with collapsible fraud pattern cards showing risk levels
-- **Clean UI**: Dark slate blue theme with collapsible accordions for example queries and fraud patterns
+- **3 Gorgeous Themes**: Mission Control (dark slate blue), Neobank (charcoal with emerald), Arctic Intel (light indigo)
+- **Dashboard Analytics**: SVG-based charts showing transaction trends, processor distribution, and risk analysis
+- **Transaction Details**: Slide-in drawer with full metadata and fraud cross-referencing
 - **100+ Mock Transactions**: Diverse dataset with realistic fraud patterns across all 3 processors
 
 ### Fraud Detection Algorithms
@@ -110,55 +112,62 @@ Try these natural language queries to see fraud detection in action:
 - **Data Sources**: Stripe MCP + PayPal Mock + Adyen Mock clients
 - **Fraud Detection**: Custom pattern analysis algorithms
 - **Testing**: Jest + ts-jest with 73%+ code coverage (229 tests)
-- **UI Components**: Lucide React for icons
+- **UI Components**: Lucide React for icons, custom SVG charts
+- **Theming**: 3 themes with CSS custom properties and localStorage persistence
 - **Test Data**: Configurable mock transaction generator
 
 ### Key Components
 
 1. **Navigation** (`src/components/Navigation.tsx`)
-   - Tab-based navigation between Query and Generator pages
+   - Tab-based navigation between Query, Dashboard, and Generator pages
    - Transaction count badge when data is loaded
-   - Consistent "Mission Control" header branding
+   - Theme switcher dropdown with icon indicators
+   - Consistent header branding with theme-aware colors
 
-2. **Transaction Context** (`src/context/TransactionContext.tsx`)
+2. **Theme Context** (`src/context/ThemeContext.tsx`)
+   - Manages theme selection (Mission Control, Neobank, Arctic Intel)
+   - localStorage persistence for user preference
+   - Theme-specific fonts, colors, and chart palettes
+
+3. **Transaction Context** (`src/context/TransactionContext.tsx`)
    - Shared state management across pages
    - SessionStorage persistence (survives page refresh)
    - Auto-computes fraud patterns when transactions change
 
-3. **Query Interface** (`src/components/QueryInterface.tsx`)
+4. **Query Interface** (`src/components/QueryInterface.tsx`)
    - Natural language input with processor selection (Stripe, PayPal, or All)
    - Collapsible example queries accordion (fraud detection + general analysis templates)
    - Real-time loading states and error handling
 
-4. **Fraud Pattern Visualization** (`src/components/FraudPatterns.tsx`)
+5. **Fraud Pattern Visualization** (`src/components/FraudPatterns.tsx`)
    - Collapsible fraud alert cards with compact headers showing risk icon, name, badge, and transaction count
    - Expandable details: description, indicators, affected transactions, recommendations
    - Risk levels (Critical, High, Medium, Low) with click-to-filter functionality
 
-5. **Data Table** (`src/components/DataTable.tsx`)
+6. **Data Table** (`src/components/DataTable.tsx`)
    - Sortable columns for all transaction fields
    - Status indicators with color coding
    - Responsive design with proper data formatting
 
-6. **Fraud Detector** (`src/lib/fraud-detector.ts`)
+7. **Fraud Detector** (`src/lib/fraud-detector.ts`)
    - 8 independent fraud detection algorithms
    - Risk scoring and pattern grouping
    - Transaction clustering for related suspicious activities
 
-7. **Claude Integration** (`src/lib/claude.ts`)
+8. **Claude Integration** (`src/lib/claude.ts`)
    - Natural language query processing with structured JSON responses
    - Intent extraction and filter generation
    - Automatic markdown stripping and validation
    - Fallback to regex parsing on errors
 
-8. **Mock Transaction Generator** (`src/components/MockTransactionGenerator.tsx`)
+9. **Mock Transaction Generator** (`src/components/MockTransactionGenerator.tsx`)
    - Dedicated `/generator` page with full-width layout
    - Configurable fraud pattern mixing (8 patterns + legitimate) - 3-column layout
    - Adjustable status distribution (4-column layout)
    - Live validation with real-time total indicators
    - SessionStorage persistence for data across refreshes
 
-9. **Payment Processor Clients**
+10. **Payment Processor Clients**
    - **Stripe MCP** (`src/lib/stripe-mcp.ts`): MCP-based Stripe integration with mock data
    - **PayPal Mock** (`src/lib/paypal-mock.ts`): 100+ diverse transactions with realistic fraud patterns
    - **Adyen Mock** (`src/lib/adyen-mock.ts`): 60+ transactions with EU-focused fraud patterns (3DS failures, cross-border)

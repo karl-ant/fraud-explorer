@@ -57,6 +57,9 @@ export default function Navigation() {
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
+              aria-label="Select theme"
+              aria-expanded={dropdownOpen}
+              aria-haspopup="menu"
               className="flex items-center space-x-2 px-3 py-1.5 bg-space-700 border border-border rounded-lg hover:border-terminal-400/50 transition-all duration-200"
             >
               <div
@@ -68,12 +71,13 @@ export default function Navigation() {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-space-800 border border-border rounded-lg shadow-panel-lg z-50 overflow-hidden animate-fade-in">
+              <div role="menu" aria-label="Theme options" className="absolute right-0 top-full mt-1 w-48 bg-space-800 border border-border rounded-lg shadow-panel-lg z-50 overflow-hidden animate-fade-in">
                 {THEME_CONFIGS.map((t) => {
                   const Icon = t.icon
                   const isActive = theme === t.value
                   return (
                     <button
+                      role="menuitem"
                       key={t.value}
                       onClick={() => {
                         setTheme(t.value)

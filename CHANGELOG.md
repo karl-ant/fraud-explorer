@@ -5,6 +5,20 @@ All notable changes to Fraud Explorer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2026-02-02
+
+### Added
+- **Theme switcher** with dropdown in Navigation header (3 themes: Mission Control, Neobank, Arctic Intel)
+- **ThemeContext** (`src/context/ThemeContext.tsx`) managing theme state with localStorage persistence
+- Theme-specific fonts: Orbitron/IBM Plex (Mission Control), DM Sans/Fira Code (Neobank), Lexend/JetBrains Mono (Arctic Intel)
+- CSS custom properties using RGB triplets for Tailwind opacity support (e.g., `--space-deep: 13 21 38`)
+- Theme-aware chart colors via CSS custom properties (DonutChart, BarChart adapt to active theme)
+
+### Changed
+- Navigation header includes theme dropdown with icon indicators (Radar, Landmark, Snowflake)
+- `globals.css` expanded with 3 complete theme definitions including grid patterns, shadows, and chart colors
+- All themes use `[data-theme="..."]` attribute selector on `documentElement`
+
 ## [1.4.0] - 2026-02-02
 
 ### Added

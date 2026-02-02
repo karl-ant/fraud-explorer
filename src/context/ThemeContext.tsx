@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { Radar, Landmark, Snowflake, LucideIcon } from 'lucide-react'
 
 export type ThemeName = 'mission' | 'neobank' | 'arctic'
@@ -14,9 +14,9 @@ interface ThemeConfig {
 }
 
 export const THEME_CONFIGS: ThemeConfig[] = [
-  { value: 'mission', label: 'Mission Control', subtitle: 'Mission Control', icon: Radar, accent: '#00a8ff' },
-  { value: 'neobank', label: 'Neobank', subtitle: 'Neobank', icon: Landmark, accent: '#10b981' },
-  { value: 'arctic', label: 'Arctic Intel', subtitle: 'Arctic Intel', icon: Snowflake, accent: '#4f46e5' },
+  { value: 'mission', label: 'Mission Control', subtitle: 'Cyber-Sec Command', icon: Radar, accent: '#00a8ff' },
+  { value: 'neobank', label: 'Neobank', subtitle: 'Modern Fintech', icon: Landmark, accent: '#10b981' },
+  { value: 'arctic', label: 'Arctic Intel', subtitle: 'Clean Analytics', icon: Snowflake, accent: '#4f46e5' },
 ]
 
 interface ThemeContextType {
