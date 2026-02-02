@@ -1,16 +1,422 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Orbitron:wght@500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=Fira+Code:wght@400;500;600&family=Lexend:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  /* Root dark theme - slate blue variant */
-  :root {
-    --color-space-deep: #0d1526;
-    --color-terminal-glow: rgba(77, 195, 255, 0.3);
+  /* ============================================================
+     THEME: Mission Control (default)
+     Colors stored as RGB triplets for Tailwind opacity support.
+     Use rgb(var(--token)) in raw CSS, or Tailwind classes with /N.
+     ============================================================ */
+  :root,
+  [data-theme="mission"] {
+    --font-display: 'Orbitron';
+    --font-mono: 'IBM Plex Mono';
+
+    /* Space layers */
+    --space-deep: 13 21 38;
+    --space-950: 17 26 46;
+    --space-900: 21 32 54;
+    --space-800: 26 40 64;
+    --space-700: 32 48 74;
+    --space-600: 40 58 88;
+    --space-500: 50 70 104;
+
+    /* Terminal accent — cyan */
+    --terminal-50: 230 247 255;
+    --terminal-100: 179 229 255;
+    --terminal-200: 128 212 255;
+    --terminal-300: 77 195 255;
+    --terminal-400: 38 181 255;
+    --terminal-500: 0 168 255;
+    --terminal-600: 0 134 204;
+    --terminal-700: 0 101 153;
+    --terminal-800: 0 68 102;
+    --terminal-900: 0 34 51;
+
+    /* Risk */
+    --risk-critical-glow: 255 23 68;
+    --risk-critical-bg: 26 10 14;
+    --risk-critical-surface: 45 18 25;
+    --risk-critical-border: 102 17 41;
+    --risk-critical-text: 255 107 122;
+    --risk-high-glow: 255 145 0;
+    --risk-high-bg: 26 17 10;
+    --risk-high-surface: 45 31 18;
+    --risk-high-border: 102 68 34;
+    --risk-high-text: 255 183 77;
+    --risk-medium-glow: 255 234 0;
+    --risk-medium-bg: 26 24 10;
+    --risk-medium-surface: 45 41 18;
+    --risk-medium-border: 102 102 34;
+    --risk-medium-text: 255 241 118;
+    --risk-low-glow: 0 230 118;
+    --risk-low-bg: 10 26 18;
+    --risk-low-surface: 18 45 31;
+    --risk-low-border: 34 102 68;
+    --risk-low-text: 105 240 174;
+
+    /* Status */
+    --status-success-glow: 0 230 118;
+    --status-success-bg: 10 26 18;
+    --status-success-border: 34 102 68;
+    --status-success-text: 105 240 174;
+    --status-failed-glow: 255 23 68;
+    --status-failed-bg: 26 10 14;
+    --status-failed-border: 102 17 41;
+    --status-failed-text: 255 107 122;
+    --status-pending-glow: 255 234 0;
+    --status-pending-bg: 26 24 10;
+    --status-pending-border: 102 102 34;
+    --status-pending-text: 255 241 118;
+    --status-canceled-glow: 120 144 156;
+    --status-canceled-bg: 15 18 21;
+    --status-canceled-border: 55 71 79;
+    --status-canceled-text: 144 164 174;
+
+    /* Text */
+    --text-primary: 236 239 241;
+    --text-secondary: 144 164 174;
+    --text-tertiary: 84 110 122;
+    --text-mono: 128 212 255;
+
+    /* Borders */
+    --border-subtle: 30 40 54;
+    --border-default: 40 52 70;
+    --border-emphasis: 61 79 102;
+    --border-glow: rgba(77, 195, 255, 0.3);
+
+    /* Shadows & glow */
+    --glow-color-sm: rgba(77, 195, 255, 0.15);
+    --glow-color: rgba(77, 195, 255, 0.25);
+    --glow-color-lg: rgba(77, 195, 255, 0.35);
+    --glow-color-xl: rgba(77, 195, 255, 0.45);
+    --panel-shadow: rgba(0, 0, 0, 0.5);
+    --panel-shadow-lg: rgba(0, 0, 0, 0.6);
+    --panel-shadow-inset: rgba(0, 0, 0, 0.4);
+    --panel-glow: rgba(77, 195, 255, 0.1);
+    --input-shadow: rgba(0, 0, 0, 0.3);
+    --input-ring: rgba(77, 195, 255, 0.1);
+
+    /* Scrollbar */
     --scrollbar-thumb: #324668;
     --scrollbar-track: #152036;
+    --scrollbar-thumb-border: rgba(77, 195, 255, 0.1);
+    --scrollbar-thumb-hover-shadow: 0 0 8px rgba(77, 195, 255, 0.3);
+
+    /* Grid patterns */
+    --grid-pattern:
+      linear-gradient(rgba(77, 195, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77, 195, 255, 0.03) 1px, transparent 1px);
+    --grid-dense:
+      linear-gradient(rgba(77, 195, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77, 195, 255, 0.05) 1px, transparent 1px);
+    --body-grid:
+      linear-gradient(rgba(77, 195, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(77, 195, 255, 0.03) 1px, transparent 1px);
+    --body-grid-size: 32px 32px;
+
+    /* Heading */
+    --heading-glow: 0 0 30px rgba(77, 195, 255, 0.3);
+
+    /* Selection */
+    --selection-bg: rgba(0, 168, 255, 0.4);
+
+    /* Text shadow & gradient */
+    --text-shadow-glow-color: rgba(77, 195, 255, 0.5);
+    --text-gradient-from: #4dc3ff;
+    --text-gradient-via: #00a8ff;
+    --text-gradient-to: #80d4ff;
+
+    /* Chart colors (hex — only used in JS/SVG) */
+    --chart-gridline: rgba(40, 52, 70, 0.6);
+    --chart-success: #69f0ae;
+    --chart-failed: #ff6b7a;
+    --chart-pending: #fff176;
+    --chart-canceled: #90a4ae;
+    --chart-stripe: #4dc3ff;
+    --chart-paypal: #60a5fa;
+    --chart-adyen: #c084fc;
+    --chart-unknown: #546e7a;
+    --chart-accent: #4dc3ff;
+    --chart-risk-critical: #ff6b7a;
+    --chart-risk-high: #ffb74d;
+    --chart-risk-medium: #fff176;
+    --chart-risk-low: #69f0ae;
+  }
+
+  /* ============================================================
+     THEME: Neobank
+     ============================================================ */
+  [data-theme="neobank"] {
+    --font-display: 'DM Sans';
+    --font-mono: 'Fira Code';
+
+    /* Space layers — neutral charcoal */
+    --space-deep: 17 17 19;
+    --space-950: 21 21 23;
+    --space-900: 24 24 27;
+    --space-800: 31 31 35;
+    --space-700: 39 39 42;
+    --space-600: 48 48 54;
+    --space-500: 63 63 70;
+
+    /* Terminal accent — emerald */
+    --terminal-50: 236 253 245;
+    --terminal-100: 209 250 229;
+    --terminal-200: 167 243 208;
+    --terminal-300: 52 211 153;
+    --terminal-400: 16 185 129;
+    --terminal-500: 16 185 129;
+    --terminal-600: 5 150 105;
+    --terminal-700: 4 120 87;
+    --terminal-800: 6 95 70;
+    --terminal-900: 6 78 59;
+
+    /* Risk */
+    --risk-critical-glow: 239 68 68;
+    --risk-critical-bg: 28 15 15;
+    --risk-critical-surface: 45 21 21;
+    --risk-critical-border: 127 29 29;
+    --risk-critical-text: 252 165 165;
+    --risk-high-glow: 249 115 22;
+    --risk-high-bg: 28 21 14;
+    --risk-high-surface: 45 32 20;
+    --risk-high-border: 124 74 30;
+    --risk-high-text: 253 186 116;
+    --risk-medium-glow: 234 179 8;
+    --risk-medium-bg: 28 26 14;
+    --risk-medium-surface: 45 41 20;
+    --risk-medium-border: 120 102 30;
+    --risk-medium-text: 253 224 71;
+    --risk-low-glow: 34 197 94;
+    --risk-low-bg: 14 28 20;
+    --risk-low-surface: 20 45 30;
+    --risk-low-border: 22 101 52;
+    --risk-low-text: 134 239 172;
+
+    /* Status */
+    --status-success-glow: 34 197 94;
+    --status-success-bg: 14 28 20;
+    --status-success-border: 22 101 52;
+    --status-success-text: 134 239 172;
+    --status-failed-glow: 239 68 68;
+    --status-failed-bg: 28 15 15;
+    --status-failed-border: 127 29 29;
+    --status-failed-text: 252 165 165;
+    --status-pending-glow: 234 179 8;
+    --status-pending-bg: 28 26 14;
+    --status-pending-border: 120 102 30;
+    --status-pending-text: 253 224 71;
+    --status-canceled-glow: 113 113 122;
+    --status-canceled-bg: 24 24 27;
+    --status-canceled-border: 63 63 70;
+    --status-canceled-text: 161 161 170;
+
+    /* Text */
+    --text-primary: 250 250 250;
+    --text-secondary: 161 161 170;
+    --text-tertiary: 82 82 91;
+    --text-mono: 52 211 153;
+
+    /* Borders */
+    --border-subtle: 39 39 42;
+    --border-default: 63 63 70;
+    --border-emphasis: 82 82 91;
+    --border-glow: rgba(16, 185, 129, 0.3);
+
+    /* Shadows */
+    --glow-color-sm: rgba(16, 185, 129, 0.1);
+    --glow-color: rgba(16, 185, 129, 0.15);
+    --glow-color-lg: rgba(16, 185, 129, 0.2);
+    --glow-color-xl: rgba(16, 185, 129, 0.3);
+    --panel-shadow: rgba(0, 0, 0, 0.5);
+    --panel-shadow-lg: rgba(0, 0, 0, 0.6);
+    --panel-shadow-inset: rgba(0, 0, 0, 0.3);
+    --panel-glow: rgba(16, 185, 129, 0.05);
+    --input-shadow: rgba(0, 0, 0, 0.2);
+    --input-ring: rgba(16, 185, 129, 0.1);
+
+    /* Scrollbar */
+    --scrollbar-thumb: #3f3f46;
+    --scrollbar-track: #18181b;
+    --scrollbar-thumb-border: rgba(16, 185, 129, 0.08);
+    --scrollbar-thumb-hover-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+
+    /* Grid — dot pattern */
+    --grid-pattern: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    --grid-dense: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    --body-grid: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    --body-grid-size: 24px 24px;
+
+    /* Heading */
+    --heading-glow: 0 0 20px rgba(16, 185, 129, 0.2);
+
+    /* Selection */
+    --selection-bg: rgba(16, 185, 129, 0.35);
+
+    /* Text shadow & gradient */
+    --text-shadow-glow-color: rgba(16, 185, 129, 0.4);
+    --text-gradient-from: #34d399;
+    --text-gradient-via: #10b981;
+    --text-gradient-to: #6ee7b7;
+
+    /* Chart colors */
+    --chart-gridline: rgba(63, 63, 70, 0.6);
+    --chart-success: #86efac;
+    --chart-failed: #fca5a5;
+    --chart-pending: #fde047;
+    --chart-canceled: #a1a1aa;
+    --chart-stripe: #34d399;
+    --chart-paypal: #818cf8;
+    --chart-adyen: #c084fc;
+    --chart-unknown: #52525b;
+    --chart-accent: #34d399;
+    --chart-risk-critical: #fca5a5;
+    --chart-risk-high: #fdba74;
+    --chart-risk-medium: #fde047;
+    --chart-risk-low: #86efac;
+  }
+
+  /* ============================================================
+     THEME: Arctic Intel
+     ============================================================ */
+  [data-theme="arctic"] {
+    --font-display: 'Lexend';
+    --font-mono: 'JetBrains Mono';
+
+    /* Space layers — icy light */
+    --space-deep: 240 242 245;
+    --space-950: 234 236 240;
+    --space-900: 228 231 237;
+    --space-800: 252 253 254;
+    --space-700: 247 248 250;
+    --space-600: 238 240 244;
+    --space-500: 223 226 232;
+
+    /* Terminal accent — indigo */
+    --terminal-50: 238 242 255;
+    --terminal-100: 224 231 255;
+    --terminal-200: 199 210 254;
+    --terminal-300: 129 140 248;
+    --terminal-400: 99 102 241;
+    --terminal-500: 79 70 229;
+    --terminal-600: 67 56 202;
+    --terminal-700: 55 48 163;
+    --terminal-800: 49 46 129;
+    --terminal-900: 30 27 75;
+
+    /* Risk — darker for light bg */
+    --risk-critical-glow: 220 38 38;
+    --risk-critical-bg: 254 242 242;
+    --risk-critical-surface: 254 226 226;
+    --risk-critical-border: 252 165 165;
+    --risk-critical-text: 185 28 28;
+    --risk-high-glow: 234 88 12;
+    --risk-high-bg: 255 247 237;
+    --risk-high-surface: 255 237 213;
+    --risk-high-border: 253 186 116;
+    --risk-high-text: 194 65 12;
+    --risk-medium-glow: 202 138 4;
+    --risk-medium-bg: 254 252 232;
+    --risk-medium-surface: 254 249 195;
+    --risk-medium-border: 253 224 71;
+    --risk-medium-text: 161 98 7;
+    --risk-low-glow: 22 163 74;
+    --risk-low-bg: 240 253 244;
+    --risk-low-surface: 220 252 231;
+    --risk-low-border: 134 239 172;
+    --risk-low-text: 21 128 61;
+
+    /* Status */
+    --status-success-glow: 22 163 74;
+    --status-success-bg: 240 253 244;
+    --status-success-border: 134 239 172;
+    --status-success-text: 21 128 61;
+    --status-failed-glow: 220 38 38;
+    --status-failed-bg: 254 242 242;
+    --status-failed-border: 252 165 165;
+    --status-failed-text: 185 28 28;
+    --status-pending-glow: 202 138 4;
+    --status-pending-bg: 254 252 232;
+    --status-pending-border: 253 224 71;
+    --status-pending-text: 161 98 7;
+    --status-canceled-glow: 156 163 175;
+    --status-canceled-bg: 243 244 246;
+    --status-canceled-border: 209 213 219;
+    --status-canceled-text: 107 114 128;
+
+    /* Text */
+    --text-primary: 26 29 35;
+    --text-secondary: 95 103 117;
+    --text-tertiary: 156 163 175;
+    --text-mono: 79 70 229;
+
+    /* Borders */
+    --border-subtle: 229 231 235;
+    --border-default: 209 213 219;
+    --border-emphasis: 156 163 175;
+    --border-glow: rgba(79, 70, 229, 0.2);
+
+    /* Shadows */
+    --glow-color-sm: rgba(79, 70, 229, 0.08);
+    --glow-color: rgba(79, 70, 229, 0.12);
+    --glow-color-lg: rgba(79, 70, 229, 0.18);
+    --glow-color-xl: rgba(79, 70, 229, 0.25);
+    --panel-shadow: rgba(0, 0, 0, 0.06);
+    --panel-shadow-lg: rgba(0, 0, 0, 0.08);
+    --panel-shadow-inset: rgba(0, 0, 0, 0.04);
+    --panel-glow: rgba(79, 70, 229, 0.06);
+    --input-shadow: rgba(0, 0, 0, 0.04);
+    --input-ring: rgba(79, 70, 229, 0.08);
+
+    /* Scrollbar */
+    --scrollbar-thumb: #c7cbd3;
+    --scrollbar-track: #eef0f4;
+    --scrollbar-thumb-border: rgba(79, 70, 229, 0.06);
+    --scrollbar-thumb-hover-shadow: 0 0 6px rgba(79, 70, 229, 0.15);
+
+    /* Grid — faint indigo lines */
+    --grid-pattern:
+      linear-gradient(rgba(79, 70, 229, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79, 70, 229, 0.04) 1px, transparent 1px);
+    --grid-dense:
+      linear-gradient(rgba(79, 70, 229, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79, 70, 229, 0.06) 1px, transparent 1px);
+    --body-grid:
+      linear-gradient(rgba(79, 70, 229, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(79, 70, 229, 0.04) 1px, transparent 1px);
+    --body-grid-size: 32px 32px;
+
+    /* Heading */
+    --heading-glow: 0 0 20px rgba(79, 70, 229, 0.15);
+
+    /* Selection */
+    --selection-bg: rgba(79, 70, 229, 0.2);
+
+    /* Text shadow & gradient */
+    --text-shadow-glow-color: rgba(79, 70, 229, 0.3);
+    --text-gradient-from: #818cf8;
+    --text-gradient-via: #4f46e5;
+    --text-gradient-to: #6366f1;
+
+    /* Chart colors — muted for light bg */
+    --chart-gridline: rgba(209, 213, 219, 0.8);
+    --chart-success: #22c55e;
+    --chart-failed: #ef4444;
+    --chart-pending: #eab308;
+    --chart-canceled: #9ca3af;
+    --chart-stripe: #6366f1;
+    --chart-paypal: #3b82f6;
+    --chart-adyen: #a855f7;
+    --chart-unknown: #9ca3af;
+    --chart-accent: #4f46e5;
+    --chart-risk-critical: #ef4444;
+    --chart-risk-high: #f97316;
+    --chart-risk-medium: #eab308;
+    --chart-risk-low: #22c55e;
   }
 
   /* Base body styling */
@@ -21,40 +427,40 @@
 
   body {
     @apply bg-space-deep text-text-primary font-sans;
-    background-image:
-      linear-gradient(rgba(77, 195, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(77, 195, 255, 0.03) 1px, transparent 1px);
-    background-size: 32px 32px;
+    background-image: var(--body-grid);
+    background-size: var(--body-grid-size);
     background-attachment: fixed;
   }
 
   /* Custom selection */
   ::selection {
-    @apply bg-terminal-500/40 text-text-primary;
+    background: var(--selection-bg);
+    color: rgb(var(--text-primary));
   }
 
-  /* Custom scrollbar - mission control style */
+  /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
 
   ::-webkit-scrollbar-track {
-    @apply bg-space-900;
+    background: var(--scrollbar-track);
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-space-500 rounded-sm;
-    border: 1px solid rgba(77, 195, 255, 0.1);
+    background: var(--scrollbar-thumb);
+    border-radius: 2px;
+    border: 1px solid var(--scrollbar-thumb-border);
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-terminal-700;
-    box-shadow: 0 0 8px rgba(77, 195, 255, 0.3);
+    background: rgb(var(--terminal-700));
+    box-shadow: var(--scrollbar-thumb-hover-shadow);
   }
 
   ::-webkit-scrollbar-corner {
-    @apply bg-space-900;
+    background: var(--scrollbar-track);
   }
 
   /* Firefox scrollbar */
@@ -63,12 +469,13 @@
     scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
 
-  /* Focus ring for accessibility */
+  /* Focus ring */
   :focus-visible {
-    @apply outline-none ring-2 ring-terminal-400/50 ring-offset-2 ring-offset-space-deep;
+    @apply outline-none ring-2 ring-terminal-400/50 ring-offset-2;
+    --tw-ring-offset-color: rgb(var(--space-deep));
   }
 
-  /* Reduced motion support */
+  /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -81,7 +488,6 @@
 }
 
 @layer components {
-  /* Mission control panel base */
   .panel {
     @apply bg-space-800 border border-border rounded-lg shadow-panel;
     @apply transition-all duration-300;
@@ -96,7 +502,6 @@
     @apply cursor-pointer;
   }
 
-  /* Terminal-style input */
   .input-terminal {
     @apply w-full px-4 py-3 bg-space-700 border border-border rounded-lg;
     @apply text-text-primary placeholder-text-tertiary;
@@ -105,7 +510,6 @@
     @apply transition-all duration-200;
   }
 
-  /* Primary button with glow */
   .btn-primary {
     @apply px-6 py-3 bg-terminal-500 hover:bg-terminal-600 active:bg-terminal-700;
     @apply text-white font-semibold rounded-lg;
@@ -114,7 +518,6 @@
     @apply transition-all duration-300;
   }
 
-  /* Ghost button */
   .btn-ghost {
     @apply px-4 py-2 bg-transparent border border-border rounded-lg;
     @apply text-text-secondary hover:text-text-primary;
@@ -122,14 +525,12 @@
     @apply transition-all duration-200;
   }
 
-  /* Status badge base */
   .badge {
     @apply inline-flex items-center px-2.5 py-1 rounded;
     @apply text-xs font-semibold uppercase tracking-wider;
     @apply border;
   }
 
-  /* Risk level badges */
   .badge-critical {
     @apply badge bg-risk-critical-bg border-risk-critical-border text-risk-critical-text;
     @apply shadow-glow-critical;
@@ -147,7 +548,6 @@
     @apply badge bg-risk-low-bg border-risk-low-border text-risk-low-text;
   }
 
-  /* Status badges */
   .badge-success {
     @apply badge bg-status-success-bg border-status-success-border text-status-success-text;
   }
@@ -164,29 +564,24 @@
     @apply badge bg-status-canceled-bg border-status-canceled-border text-status-canceled-text;
   }
 
-  /* Display heading style */
   .heading-display {
     @apply font-display font-bold uppercase tracking-wide;
     @apply text-text-primary;
-    text-shadow: 0 0 30px rgba(77, 195, 255, 0.3);
+    text-shadow: var(--heading-glow);
   }
 
-  /* Data/mono text with terminal tint */
   .text-data {
     @apply font-mono text-text-mono;
   }
 
-  /* Glow text effect */
   .text-glow {
     text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
   }
 
-  /* Table row hover */
   .table-row-hover {
     @apply hover:bg-space-700/50 transition-colors duration-150;
   }
 
-  /* Alert box styles */
   .alert-info {
     @apply border-l-4 border-terminal-400 bg-terminal-900/30 rounded-r-lg p-4;
     @apply shadow-glow-sm;
@@ -199,22 +594,19 @@
 }
 
 @layer utilities {
-  /* Text shadow utilities */
   .text-shadow-glow {
-    text-shadow: 0 0 20px rgba(77, 195, 255, 0.5);
+    text-shadow: 0 0 20px var(--text-shadow-glow-color);
   }
 
   .text-shadow-critical {
     text-shadow: 0 0 15px rgba(255, 23, 68, 0.5);
   }
 
-  /* Gradient text */
   .text-gradient-terminal {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, #4dc3ff 0%, #00a8ff 50%, #80d4ff 100%);
+    background-image: linear-gradient(135deg, var(--text-gradient-from) 0%, var(--text-gradient-via) 50%, var(--text-gradient-to) 100%);
   }
 
-  /* Corner cut effect for panels */
   .corner-cut {
     clip-path: polygon(
       0 8px, 8px 0,
@@ -224,7 +616,6 @@
     );
   }
 
-  /* Subtle noise texture overlay */
   .noise-overlay {
     position: relative;
   }
@@ -239,7 +630,6 @@
     mix-blend-mode: overlay;
   }
 
-  /* Scan line effect */
   .scan-lines {
     position: relative;
     overflow: hidden;
@@ -259,7 +649,6 @@
     pointer-events: none;
   }
 
-  /* Accordion collapse/expand utilities */
   .accordion-content {
     display: grid;
     grid-template-rows: 0fr;

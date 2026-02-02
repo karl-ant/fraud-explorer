@@ -1,13 +1,26 @@
 # Fraud Explorer
 
-> **Version**: 1.3.0 | **Last Updated**: 2026-01-12
+> **Version**: 1.4.1 | **Last Updated**: 2026-02-02
 
 ## Critical Instructions
 - Do not use the public npm registry, only the internal registry
 - Do not use esbuild (blocked by Anthropic policy) - use Jest for testing
 - Always run the app on port 3006
 
-## Recent Changes (v1.3.0)
+## Recent Changes (v1.4.1)
+- **Theme Switcher**: 3 themes (Mission Control, Neobank, Arctic Intel) with dropdown in Navigation header
+- **ThemeContext**: React Context at `src/context/ThemeContext.tsx` with localStorage persistence
+- **CSS Variables**: RGB triplet format for Tailwind opacity support (e.g., `rgb(var(--space-deep))`)
+- **Theme-Aware Charts**: Chart colors adapt per theme via CSS custom properties
+
+### Previous (v1.4.0)
+- **Dashboard Page**: SVG-based charts (DonutChart, BarChart, StatCard) at `/dashboard` route
+- **Transaction Drawer**: Slide-in panel with full details and fraud cross-referencing
+- **Client-Side Filters**: FilterBar with status, processor, and amount range filters
+- **Analytics Utility**: 5 pure functions in `src/lib/analytics.ts` with 15 tests
+- **Pagination**: DataTable pagination with 25/50/100 page size selector
+
+### Previous (v1.3.0)
 - **Test Infrastructure**: Jest + ts-jest setup with 229 tests across 6 test files
 - **73% Code Coverage**: Comprehensive tests for all `src/lib/` modules
 - **Test Subagent**: Created `.claude/agents/test.md` for writing Jest tests
@@ -52,8 +65,10 @@ npm run test:coverage # Run tests with coverage report
 - **Types**: `src/types/index.ts`
 - **Claude integration**: `src/lib/claude.ts`
 - **Transaction context**: `src/context/TransactionContext.tsx`
+- **Theme context**: `src/context/ThemeContext.tsx`
 - **Navigation**: `src/components/Navigation.tsx`
 - **Generator page**: `src/app/generator/page.tsx`
+- **Dashboard page**: `src/app/dashboard/page.tsx`
 
 ## Stripe MCP Integration
 
@@ -173,12 +188,33 @@ Located at `/generator` route. Uses `src/lib/mock-generator.ts` and `src/compone
 
 ## UI/Styling System
 
-### Theme Colors (`tailwind.config.js`)
-The app uses a "mission control" dark slate blue theme:
-- `space-deep`: `#0d1526` - Body background
-- `space-800`: `#1a2840` - Panels/cards
-- `space-700`: `#20304a` - Interactive surfaces
-- `terminal-500`: `#00a8ff` - Primary accent (cyan blue)
+### Theme System
+The app supports 3 themes switchable via dropdown in Navigation header:
+
+#### Mission Control (default)
+- **Font**: Orbitron (display), IBM Plex Mono (mono)
+- **Background**: Dark slate blue (`#0d1526`)
+- **Accent**: Cyan blue (`#00a8ff`)
+- **Grid**: Linear gradient pattern (32px)
+
+#### Neobank
+- **Font**: DM Sans (display), Fira Code (mono)
+- **Background**: Neutral charcoal (`#111113`)
+- **Accent**: Emerald green (`#10b981`)
+- **Grid**: Dot pattern (24px)
+
+#### Arctic Intel
+- **Font**: Lexend (display), JetBrains Mono (mono)
+- **Background**: Icy light (`#f0f2f5`)
+- **Accent**: Indigo (`#4f46e5`)
+- **Grid**: Faint line pattern (20px)
+
+### Theme Implementation
+- **ThemeContext** (`src/context/ThemeContext.tsx`): Manages theme state with localStorage persistence
+- **CSS Variables** (`globals.css`): RGB triplets for Tailwind opacity support
+  - Example: `--space-deep: 13 21 38` → `bg-[rgb(var(--space-deep))]` or `bg-[rgb(var(--space-deep))]/80`
+- **Theme Switching**: `document.documentElement.dataset.theme = 'neobank'`
+- **Chart Colors**: Each theme defines chart color custom properties that SVG components reference
 
 ### Accordion Components (`globals.css`)
 Collapsible sections use CSS grid-based animations:
@@ -189,10 +225,12 @@ Collapsible sections use CSS grid-based animations:
 ```
 
 ### Key UI Components
-- **Navigation**: Header with "Query" and "Generator" tabs, shows transaction count badge when data loaded
+- **Navigation**: Header with "Query", "Dashboard", and "Generator" tabs; transaction count badge; theme dropdown selector
 - **QueryInterface**: Example queries collapsed by default, toggle via accordion header
 - **FraudPatterns**: Pattern cards show compact headers (icon, name, badge, count), expand to show full details
 - **MockTransactionGenerator**: Full-page form with live validation, 3-col fraud mix, 4-col status distribution
+- **Dashboard**: SVG charts (DonutChart, BarChart, StatCard) with theme-aware colors
+- **TransactionDrawer**: Slide-in panel with full transaction details and fraud analysis
 
 ## Testing
 
