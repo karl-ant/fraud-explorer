@@ -38,7 +38,7 @@ export default function BarChart({ bars, title, formatValue = String }: BarChart
             const y = padding.top + chartHeight - (tv / max) * chartHeight
             return (
               <g key={i}>
-                <line x1={padding.left} y1={y} x2={svgWidth - padding.right} y2={y} stroke="rgba(40,52,70,0.6)" strokeDasharray="3 3" />
+                <line x1={padding.left} y1={y} x2={svgWidth - padding.right} y2={y} stroke="var(--chart-gridline)" strokeDasharray="3 3" />
                 <text x={padding.left - 6} y={y + 4} textAnchor="end" className="fill-text-tertiary text-[9px] font-mono">
                   {formatValue(tv)}
                 </text>

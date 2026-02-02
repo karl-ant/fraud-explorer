@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { BarChart3, DollarSign, Activity, ShieldAlert, Wand2 } from 'lucide-react'
 import Link from 'next/link'
 import { useTransactions } from '@/context/TransactionContext'
@@ -15,29 +15,38 @@ import {
   computeOverviewStats,
 } from '@/lib/analytics'
 
-const STATUS_COLORS: Record<string, string> = {
-  succeeded: '#69f0ae',
-  failed: '#ff6b7a',
-  pending: '#fff176',
-  canceled: '#90a4ae',
+function getCSSVar(name: string): string {
+  if (typeof window === 'undefined') return ''
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim()
 }
 
-const PROCESSOR_COLORS: Record<string, string> = {
-  stripe: '#4dc3ff',
-  paypal: '#60a5fa',
-  adyen: '#c084fc',
-  unknown: '#546e7a',
-}
-
-const RISK_COLORS: Record<string, string> = {
-  critical: '#ff6b7a',
-  high: '#ffb74d',
-  medium: '#fff176',
-  low: '#69f0ae',
+function useChartColors() {
+  return useCallback(() => ({
+    status: {
+      succeeded: getCSSVar('--chart-success'),
+      failed: getCSSVar('--chart-failed'),
+      pending: getCSSVar('--chart-pending'),
+      canceled: getCSSVar('--chart-canceled'),
+    } as Record<string, string>,
+    processor: {
+      stripe: getCSSVar('--chart-stripe'),
+      paypal: getCSSVar('--chart-paypal'),
+      adyen: getCSSVar('--chart-adyen'),
+      unknown: getCSSVar('--chart-unknown'),
+    } as Record<string, string>,
+    risk: {
+      critical: getCSSVar('--chart-risk-critical'),
+      high: getCSSVar('--chart-risk-high'),
+      medium: getCSSVar('--chart-risk-medium'),
+      low: getCSSVar('--chart-risk-low'),
+    } as Record<string, string>,
+    accent: getCSSVar('--chart-accent'),
+  }), [])
 }
 
 export default function DashboardPage() {
   const { transactions, fraudPatterns, hasGeneratedData } = useTransactions()
+  const getColors = useChartColors()
 
   const stats = useMemo(() => computeOverviewStats(transactions, fraudPatterns), [transactions, fraudPatterns])
   const statusDist = useMemo(() => computeStatusDistribution(transactions), [transactions])
@@ -62,6 +71,7 @@ export default function DashboardPage() {
   }
 
   const formatDollar = (cents: number) => `$${(cents / 100).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
+  const colors = getColors()
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -80,7 +90,7 @@ export default function DashboardPage() {
           segments={statusDist.map(s => ({
             label: s.status,
             value: s.count,
-            color: STATUS_COLORS[s.status] || '#546e7a',
+            color: colors.status[s.status] || colors.processor.unknown,
           }))}
         />
         <DonutChart
@@ -88,7 +98,7 @@ export default function DashboardPage() {
           segments={processorBreak.map(p => ({
             label: p.processor,
             value: p.count,
-            color: PROCESSOR_COLORS[p.processor] || '#546e7a',
+            color: colors.processor[p.processor] || colors.processor.unknown,
           }))}
         />
       </div>
@@ -97,9 +107,9 @@ export default function DashboardPage() {
       <BarChart
         title="Transaction Volume by Day"
         bars={volumeByDay.map(d => ({
-          label: d.date.slice(5), // MM-DD
+          label: d.date.slice(5),
           value: d.count,
-          color: '#4dc3ff',
+          color: colors.accent,
         }))}
       />
 
@@ -111,7 +121,7 @@ export default function DashboardPage() {
             bars={fraudSummary.map(f => ({
               label: f.patternType.replace(/_/g, ' ').split(' ').map(w => w[0]?.toUpperCase()).join(''),
               value: f.count,
-              color: RISK_COLORS[f.riskLevel] || '#546e7a',
+              color: colors.risk[f.riskLevel] || colors.processor.unknown,
             }))}
           />
           <div className="panel p-4 space-y-3">
@@ -120,7 +130,7 @@ export default function DashboardPage() {
               {fraudSummary.map((f, i) => (
                 <div key={i} className="flex items-center justify-between p-2 bg-space-800 rounded border border-border">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: RISK_COLORS[f.riskLevel] || '#546e7a' }} />
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: colors.risk[f.riskLevel] || colors.processor.unknown }} />
                     <span className="text-sm text-text-secondary capitalize">{f.patternType.replace(/_/g, ' ')}</span>
                   </div>
                   <div className="flex items-center gap-3">
