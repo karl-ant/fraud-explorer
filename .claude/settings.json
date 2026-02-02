@@ -2,5 +2,19 @@
   "enabledPlugins": {
     "feature-dev@claude-plugins-official": true,
     "ralph-loop@claude-plugins-official": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if echo \"$TOOL_INPUT\" | grep -q 'git push'; then echo '[POST-PUSH] Branch pushed. Run /post-push-review to trigger design review, code review, test coverage, and docs sync agents.'; fi",
+            "timeout": 5000
+          }
+        ]
+      }
+    ]
   }
 }

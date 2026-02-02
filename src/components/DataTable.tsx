@@ -1,19 +1,24 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronUp, ChevronDown, CheckCircle, XCircle, Clock, AlertCircle, ExternalLink, Database } from 'lucide-react'
+import { useState, useMemo } from 'react'
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, AlertCircle, ExternalLink, Database } from 'lucide-react'
 import { TransactionData } from '@/types'
 
 interface DataTableProps {
   data: TransactionData[]
+  onSelectTransaction?: (transaction: TransactionData) => void
 }
 
 type SortField = keyof TransactionData
 type SortDirection = 'asc' | 'desc'
 
-export default function DataTable({ data }: DataTableProps) {
+const PAGE_SIZE_OPTIONS = [25, 50, 100] as const
+
+export default function DataTable({ data, onSelectTransaction }: DataTableProps) {
   const [sortField, setSortField] = useState<SortField>('created')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState<number>(50)
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -24,17 +29,23 @@ export default function DataTable({ data }: DataTableProps) {
     }
   }
 
-  const sortedData = [...data].sort((a, b) => {
-    const aValue = a[sortField]
-    const bValue = b[sortField]
+  const sortedData = useMemo(() => {
+    return [...data].sort((a, b) => {
+      const aValue = a[sortField]
+      const bValue = b[sortField]
 
-    if (aValue === bValue) return 0
-    if (aValue == null) return 1
-    if (bValue == null) return -1
+      if (aValue === bValue) return 0
+      if (aValue == null) return 1
+      if (bValue == null) return -1
 
-    const comparison = aValue < bValue ? -1 : 1
-    return sortDirection === 'asc' ? comparison : -comparison
-  })
+      const comparison = aValue < bValue ? -1 : 1
+      return sortDirection === 'asc' ? comparison : -comparison
+    })
+  }, [data, sortField, sortDirection])
+
+  const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize))
+  const safePage = Math.min(currentPage, totalPages)
+  const paginatedData = sortedData.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   const formatCurrency = (amount: number, currency: string) => {
     if (typeof amount !== 'number' || isNaN(amount) || amount === null || amount === undefined) {
@@ -199,7 +210,7 @@ export default function DataTable({ data }: DataTableProps) {
 
           {/* Table Body */}
           <tbody className="divide-y divide-border-subtle">
-            {sortedData.map((transaction, index) => {
+            {paginatedData.map((transaction, index) => {
               const stripeUrl = getStripeTransactionUrl(transaction.id)
               const statusConfig = getStatusConfig(transaction.status)
               const formattedDate = formatDate(transaction.created)
@@ -207,8 +218,9 @@ export default function DataTable({ data }: DataTableProps) {
               return (
                 <tr
                   key={transaction.id}
-                  className="hover:bg-space-700/50 transition-colors duration-150"
+                  className={`hover:bg-space-700/50 transition-colors duration-150 ${onSelectTransaction ? 'cursor-pointer' : ''}`}
                   style={{ animationDelay: `${index * 20}ms` }}
+                  onClick={() => onSelectTransaction?.(transaction)}
                 >
                   {/* ID Column */}
                   <td className="px-4 py-3">
@@ -308,6 +320,49 @@ export default function DataTable({ data }: DataTableProps) {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {sortedData.length > PAGE_SIZE_OPTIONS[0] && (
+        <div className="flex items-center justify-between px-2">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-text-tertiary font-mono">Rows per page:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1) }}
+              className="bg-space-700 border border-border rounded px-2 py-1 text-xs font-mono text-text-primary focus:border-terminal-400 focus:outline-none"
+            >
+              {PAGE_SIZE_OPTIONS.map(size => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center space-x-3">
+            <span className="text-xs text-text-tertiary font-mono">
+              {((safePage - 1) * pageSize) + 1}–{Math.min(safePage * pageSize, sortedData.length)} of {sortedData.length}
+            </span>
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={safePage <= 1}
+                className="p-1 rounded hover:bg-space-700 text-text-secondary hover:text-terminal-300 disabled:text-space-600 disabled:hover:bg-transparent transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <span className="text-xs font-mono text-text-secondary px-2">
+                {safePage} / {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={safePage >= totalPages}
+                className="p-1 rounded hover:bg-space-700 text-text-secondary hover:text-terminal-300 disabled:text-space-600 disabled:hover:bg-transparent transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -32,3 +32,34 @@ export interface FraudPattern {
   affected_transactions: string[];
   recommendation: string;
 }
+
+export interface ClaudeFilters {
+  status?: string[];
+  processors?: string[];
+  amount?: { min?: number; max?: number };
+  currency?: string;
+  country?: string;
+  timeRange?: {
+    relative?: string;
+    start?: string;
+    end?: string;
+  };
+  customer?: string;
+  fraudIndicators?: string[];
+}
+
+export interface ClaudeQueryResponse {
+  filters: ClaudeFilters;
+  intent: string;
+  explanation: string;
+}
+
+export interface TransactionFilters {
+  status?: string;
+  amount?: { gte?: number; lte?: number };
+  created?: { gte?: number; lte?: number };
+  currency?: string;
+  country?: string;
+  customer?: string;
+  limit?: number;
+}

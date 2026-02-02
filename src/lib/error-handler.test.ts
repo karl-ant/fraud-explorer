@@ -51,11 +51,8 @@ describe('handleApiError', () => {
 
       const result = handleApiError(error)
 
-      // AppError extends Error, so message is preserved
       expect(result.message).toBe('Custom error')
-      // Note: Due to Jest module isolation, instanceof AppError may not work correctly
-      // The statusCode is returned correctly if the instanceof check passes
-      expect(result.statusCode).toBe(500) // Falls through to Error handler
+      expect(result.statusCode).toBe(403)
     })
 
     it('should handle AppError with default statusCode', () => {

@@ -4,7 +4,12 @@ import StripeMCPClient from '@/lib/stripe-mcp'
 import PayPalMockClient from '@/lib/paypal-mock'
 import AdyenMockClient from '@/lib/adyen-mock'
 import { FraudDetector } from '@/lib/fraud-detector'
-import { TransactionData, QueryResponse } from '@/types'
+import { TransactionData, QueryResponse, FraudPattern, ClaudeQueryResponse, TransactionFilters } from '@/types'
+
+// Singleton clients - reused across requests
+const stripeMCP = new StripeMCPClient()
+const paypalMock = new PayPalMockClient()
+const adyenMock = new AdyenMockClient()
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,24 +28,21 @@ export async function POST(request: NextRequest) {
 
     // Use Claude's structured response to determine what data to fetch
     const filters = applyClaudeFilters(claudeResponse, query)
-    
+
     let allTransactions: TransactionData[] = []
 
     // Fetch from selected processors
     if (processor === 'stripe' || processor === 'all') {
-      const stripeMCP = new StripeMCPClient()
       const stripeTransactions = await stripeMCP.listCharges(filters, useRealStripe)
       allTransactions.push(...stripeTransactions as TransactionData[])
     }
 
     if (processor === 'paypal' || processor === 'all') {
-      const paypalMock = new PayPalMockClient()
       const paypalTransactions = await paypalMock.listTransactions(filters)
       allTransactions.push(...paypalTransactions)
     }
 
     if (processor === 'adyen' || processor === 'all') {
-      const adyenMock = new AdyenMockClient()
       const adyenTransactions = await adyenMock.listTransactions(filters)
       allTransactions.push(...adyenTransactions)
     }
@@ -79,8 +81,8 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function applyClaudeFilters(claudeResponse: any, fallbackQuery: string) {
-  const filters: any = {}
+function applyClaudeFilters(claudeResponse: ClaudeQueryResponse, fallbackQuery: string): TransactionFilters {
+  const filters: TransactionFilters = {}
 
   try {
     const { filters: claudeFilters } = claudeResponse
@@ -163,8 +165,8 @@ function applyClaudeFilters(claudeResponse: any, fallbackQuery: string) {
 }
 
 // Legacy fallback function for when Claude parsing fails
-function parseQueryToFiltersLegacy(query: string) {
-  const filters: any = {}
+function parseQueryToFiltersLegacy(query: string): TransactionFilters {
+  const filters: TransactionFilters = {}
   const queryLower = query.toLowerCase()
 
   // Status filters
@@ -216,7 +218,7 @@ function parseQueryToFiltersLegacy(query: string) {
   return filters
 }
 
-function generateSummary(query: string, transactions: TransactionData[], fraudPatterns: any[] = []): string {
+function generateSummary(query: string, transactions: TransactionData[], fraudPatterns: FraudPattern[] = []): string {
   const total = transactions.length
   const successful = transactions.filter(t => t.status === 'succeeded').length
   const failed = transactions.filter(t => t.status === 'failed').length

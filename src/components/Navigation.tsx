@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Search, Wand2, Radar, Database } from 'lucide-react'
+import { Search, Wand2, BarChart3, Radar, Database } from 'lucide-react'
 import { useTransactions } from '@/context/TransactionContext'
 
 export default function Navigation() {
@@ -19,6 +19,11 @@ export default function Navigation() {
       href: '/generator',
       label: 'Generator',
       icon: Wand2
+    },
+    {
+      href: '/dashboard',
+      label: 'Dashboard',
+      icon: BarChart3
     }
   ]
 

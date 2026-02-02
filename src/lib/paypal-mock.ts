@@ -101,7 +101,7 @@ class PayPalMockClient {
       id: `pp_cardtest_${i.toString().padStart(3, '0')}`,
       amount: Math.floor(Math.random() * 200) + 100, // $1-$3
       currency: 'usd',
-      status: (i < 12 ? 'failed' : 'succeeded') as const,
+      status: (i < 12 ? 'failed' : 'succeeded') as TransactionData['status'],
       processor: 'paypal' as const,
       created: baseTime + (i * 30), // 30 seconds apart
       customer: 'cus_suspicious_001',
@@ -179,7 +179,7 @@ class PayPalMockClient {
       id: `pp_round_${i.toString().padStart(3, '0')}`,
       amount,
       currency: 'usd',
-      status: (i % 3 === 0 ? 'failed' : 'succeeded') as const,
+      status: (i % 3 === 0 ? 'failed' : 'succeeded') as TransactionData['status'],
       processor: 'paypal' as const,
       created: now - (3600 * (i + 1)), // Spaced over hours
       customer: `cus_round_${i}`,
@@ -299,7 +299,7 @@ class PayPalMockClient {
         id: `pp_legit_${i.toString().padStart(3, '0')}`,
         amount: normalAmounts[i % normalAmounts.length] * 100,
         currency: currencies[i % currencies.length],
-        status: (Math.random() > 0.1 ? 'succeeded' : 'failed') as const, // 90% success rate
+        status: (Math.random() > 0.1 ? 'succeeded' : 'failed') as TransactionData['status'], // 90% success rate
         processor: 'paypal' as const,
         created: now - (Math.random() * 86400 * 7), // Random within last week
         customer: `cus_legit_${i}`,
@@ -324,7 +324,7 @@ class PayPalMockClient {
       id: `pp_velocity_${i.toString().padStart(3, '0')}`,
       amount: Math.floor(Math.random() * 5000) + 1000, // $10-$60
       currency: 'usd',
-      status: (i < 2 ? 'failed' : 'succeeded') as const,
+      status: (i < 2 ? 'failed' : 'succeeded') as TransactionData['status'],
       processor: 'paypal' as const,
       created: baseTime + (i * 50), // 50 seconds apart
       customer: 'cus_velocity_001',
@@ -350,7 +350,7 @@ class PayPalMockClient {
       id: `pp_highrisk_${i.toString().padStart(3, '0')}`,
       amount: Math.floor(Math.random() * 100000) + 50000, // $500-$1500
       currency: 'usd',
-      status: (Math.random() > 0.3 ? 'succeeded' : 'failed') as const, // 70% success
+      status: (Math.random() > 0.3 ? 'succeeded' : 'failed') as TransactionData['status'], // 70% success
       processor: 'paypal' as const,
       created: now - (3600 * (i + 1)), // Spaced over hours
       customer: `cus_highrisk_${i}`,

@@ -149,6 +149,7 @@ module.exports = {
         'scan-line': 'scan-line 2s linear infinite',
         'fade-in': 'fade-in 0.3s ease-out',
         'slide-up': 'slide-up 0.4s ease-out',
+        'slide-in-right': 'slide-in-right 0.25s ease-out',
       },
 
       keyframes: {
@@ -185,6 +186,10 @@ module.exports = {
         'slide-up': {
           '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        'slide-in-right': {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
         },
       },
 

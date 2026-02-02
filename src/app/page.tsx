@@ -5,8 +5,10 @@ import { Shield, AlertTriangle, X, Database } from 'lucide-react'
 import QueryInterface from '@/components/QueryInterface'
 import DataTable from '@/components/DataTable'
 import FraudPatterns from '@/components/FraudPatterns'
+import FilterBar, { ActiveFilters, EMPTY_FILTERS, applyClientFilters } from '@/components/FilterBar'
+import TransactionDrawer from '@/components/TransactionDrawer'
 import { useTransactions } from '@/context/TransactionContext'
-import { QueryResponse } from '@/types'
+import { QueryResponse, TransactionData } from '@/types'
 
 export default function Home() {
   const { transactions: contextTransactions, fraudPatterns: contextFraudPatterns, hasGeneratedData } = useTransactions()
@@ -15,6 +17,8 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [filteredTransactionIds, setFilteredTransactionIds] = useState<string[] | null>(null)
   const [showingGeneratedData, setShowingGeneratedData] = useState(false)
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS)
+  const [selectedTransaction, setSelectedTransaction] = useState<TransactionData | null>(null)
 
   // Auto-display generated data when available and no API query has been made
   useEffect(() => {
@@ -79,8 +83,11 @@ export default function Home() {
 
   const getDisplayedTransactions = () => {
     if (!response?.data) return []
-    if (!filteredTransactionIds) return response.data
-    return response.data.filter(t => filteredTransactionIds.includes(t.id))
+    let data = response.data
+    if (filteredTransactionIds) {
+      data = data.filter(t => filteredTransactionIds.includes(t.id))
+    }
+    return applyClientFilters(data, activeFilters)
   }
 
   const hasAlerts = response?.summary?.includes('🚨') || (response?.fraud_patterns && response.fraud_patterns.length > 0)
@@ -165,6 +172,11 @@ export default function Home() {
               </div>
             )}
 
+            {/* Client-Side Filters */}
+            {!response.error && response.data.length > 0 && (
+              <FilterBar filters={activeFilters} onChange={setActiveFilters} />
+            )}
+
             {/* Error Display */}
             {response.error ? (
               <div className="bg-risk-critical-bg border border-risk-critical-border rounded-lg p-4">
@@ -176,7 +188,10 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              <DataTable data={getDisplayedTransactions()} />
+              <DataTable
+                data={getDisplayedTransactions()}
+                onSelectTransaction={setSelectedTransaction}
+              />
             )}
           </div>
         </div>
@@ -201,6 +216,13 @@ export default function Home() {
           <span>AI Analysis</span>
         </div>
       </footer>
+
+      {/* Transaction Detail Drawer */}
+      <TransactionDrawer
+        transaction={selectedTransaction}
+        fraudPatterns={response?.fraud_patterns || []}
+        onClose={() => setSelectedTransaction(null)}
+      />
     </div>
   )
 }
