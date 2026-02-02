@@ -272,5 +272,6 @@
 
   .accordion-inner {
     overflow: hidden;
+    min-height: 0;
   }
 }
