@@ -1,15 +1,16 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, AlertCircle, ExternalLink, Database } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, AlertCircle, ExternalLink, Database, ShieldAlert } from 'lucide-react'
 import { TransactionData } from '@/types'
+import { getRiskScore, getRiskLevel, getRiskBadgeConfig } from '@/lib/risk-utils'
 
 interface DataTableProps {
   data: TransactionData[]
   onSelectTransaction?: (transaction: TransactionData) => void
 }
 
-type SortField = keyof TransactionData
+type SortField = keyof TransactionData | 'risk_score'
 type SortDirection = 'asc' | 'desc'
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const
@@ -29,10 +30,22 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
     }
   }
 
+  const riskScoreMap = useMemo(() => {
+    if (sortField !== 'risk_score') return null
+    return new Map(data.map(t => [t.id, getRiskScore(t)]))
+  }, [data, sortField])
+
   const sortedData = useMemo(() => {
     return [...data].sort((a, b) => {
-      const aValue = a[sortField]
-      const bValue = b[sortField]
+      if (sortField === 'risk_score' && riskScoreMap) {
+        const aScore = riskScoreMap.get(a.id) || 0
+        const bScore = riskScoreMap.get(b.id) || 0
+        const comparison = aScore - bScore
+        return sortDirection === 'asc' ? comparison : -comparison
+      }
+
+      const aValue = a[sortField as keyof TransactionData]
+      const bValue = b[sortField as keyof TransactionData]
 
       if (aValue === bValue) return 0
       if (aValue == null) return 1
@@ -41,7 +54,7 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
       const comparison = aValue < bValue ? -1 : 1
       return sortDirection === 'asc' ? comparison : -comparison
     })
-  }, [data, sortField, sortDirection])
+  }, [data, sortField, sortDirection, riskScoreMap])
 
   const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize))
   const safePage = Math.min(currentPage, totalPages)
@@ -189,6 +202,13 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
                 </SortButton>
               </th>
               <th className="px-4 py-3 text-left">
+                <SortButton field="risk_score">
+                  <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                    Risk
+                  </span>
+                </SortButton>
+              </th>
+              <th className="px-4 py-3 text-left">
                 <SortButton field="created">
                   <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
                     Timestamp
@@ -247,12 +267,12 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
                   {/* Processor Column */}
                   <td className="px-4 py-3">
                     {transaction.processor ? (
-                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium uppercase
+                      <span className={`inline-flex items-center px-2 py-1 rounded border text-xs font-medium uppercase
                         ${transaction.processor === 'stripe'
-                          ? 'bg-terminal-900/50 border border-terminal-500/30 text-terminal-300'
+                          ? 'bg-processor-stripe-bg border-processor-stripe-border text-processor-stripe-text'
                           : transaction.processor === 'paypal'
-                          ? 'bg-blue-900/20 border border-blue-500/30 text-blue-300'
-                          : 'bg-purple-900/20 border border-purple-500/30 text-purple-300'
+                          ? 'bg-processor-paypal-bg border-processor-paypal-border text-processor-paypal-text'
+                          : 'bg-processor-adyen-bg border-processor-adyen-border text-processor-adyen-text'
                         }`}>
                         {transaction.processor}
                       </span>
@@ -279,6 +299,22 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
                         {transaction.original_status || transaction.status}
                       </span>
                     </div>
+                  </td>
+
+                  {/* Risk Score Column */}
+                  <td className="px-4 py-3">
+                    {transaction.metadata?.risk_score ? (() => {
+                      const score = getRiskScore(transaction)
+                      const badgeConfig = getRiskBadgeConfig(getRiskLevel(score))
+                      return (
+                        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-mono font-medium ${badgeConfig.className}`}>
+                          <ShieldAlert className="h-3 w-3" />
+                          <span>{score}</span>
+                        </div>
+                      )
+                    })() : (
+                      <span className="text-text-tertiary text-sm">—</span>
+                    )}
                   </td>
 
                   {/* Date Column */}

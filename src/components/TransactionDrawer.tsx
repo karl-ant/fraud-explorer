@@ -3,6 +3,7 @@
 import { useEffect, useCallback } from 'react'
 import { X, CheckCircle, XCircle, Clock, AlertCircle, ExternalLink, Shield } from 'lucide-react'
 import { TransactionData, FraudPattern } from '@/types'
+import { getRiskLevel, getRiskBadgeConfig, getRiskBarColor } from '@/lib/risk-utils'
 
 interface TransactionDrawerProps {
   transaction: TransactionData | null
@@ -61,13 +62,8 @@ export default function TransactionDrawer({ transaction, fraudPatterns, onClose 
   }
 
   const getRiskBadge = (level: string) => {
-    const map: Record<string, string> = {
-      critical: 'bg-risk-critical-bg border-risk-critical-border text-risk-critical-text',
-      high: 'bg-risk-high-bg border-risk-high-border text-risk-high-text',
-      medium: 'bg-risk-medium-bg border-risk-medium-border text-risk-medium-text',
-      low: 'bg-risk-low-bg border-risk-low-border text-risk-low-text',
-    }
-    return map[level] || 'bg-space-700 border-border text-text-tertiary'
+    const config = getRiskBadgeConfig(level as 'low' | 'medium' | 'high' | 'critical')
+    return config?.className || 'bg-space-700 border-border text-text-tertiary'
   }
 
   const statusConfig = getStatusConfig(transaction.status)
@@ -77,9 +73,9 @@ export default function TransactionDrawer({ transaction, fraudPatterns, onClose 
     : null
 
   const processorColor: Record<string, string> = {
-    stripe: 'bg-terminal-900/50 border-terminal-500/30 text-terminal-300',
-    paypal: 'bg-blue-900/20 border-blue-500/30 text-blue-300',
-    adyen: 'bg-purple-900/20 border-purple-500/30 text-purple-300',
+    stripe: 'bg-processor-stripe-bg border-processor-stripe-border text-processor-stripe-text',
+    paypal: 'bg-processor-paypal-bg border-processor-paypal-border text-processor-paypal-text',
+    adyen: 'bg-processor-adyen-bg border-processor-adyen-border text-processor-adyen-text',
   }
 
   return (
@@ -121,6 +117,31 @@ export default function TransactionDrawer({ transaction, fraudPatterns, onClose 
               <span className="text-sm text-text-tertiary uppercase">{transaction.currency}</span>
             </div>
           </Section>
+
+          {/* Risk Score */}
+          {transaction.metadata?.risk_score && (() => {
+            const score = parseInt(transaction.metadata.risk_score, 10)
+            const level = getRiskLevel(score)
+            const badgeConfig = getRiskBadgeConfig(level)
+            return (
+              <Section title="Risk Score">
+                <div className="space-y-2">
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-2xl font-mono font-bold text-text-primary">{score}</span>
+                    <span className={`px-2 py-0.5 rounded border text-xs font-medium uppercase tracking-wider ${badgeConfig.className}`}>
+                      {badgeConfig.label}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-space-700 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${getRiskBarColor(level)}`}
+                      style={{ width: `${Math.min(score, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </Section>
+            )
+          })()}
 
           {/* Timeline */}
           <Section title="Created">

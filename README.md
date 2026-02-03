@@ -14,11 +14,11 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
 - **Natural Language Queries**: Ask questions about transaction data in plain English powered by Claude 3.5 Sonnet
 - **Advanced Fraud Detection**: 8 sophisticated fraud pattern detection algorithms analyzing transactions in real-time
 - **Multi-Processor Support**: Unified view across Stripe, PayPal, and Adyen (with mock data for demo)
-- **Mock Transaction Generator**: Create custom test datasets with configurable fraud patterns and status distributions
-- **Interactive Visualizations**: Sortable transaction tables with collapsible fraud pattern cards showing risk levels
+- **Mock Transaction Generator**: Create custom test datasets with configurable fraud patterns, status distributions, and **multi-processor selection** (split transactions evenly across 1-3 processors)
+- **Interactive Visualizations**: Sortable transaction tables with **color-coded risk score column** (LOW/MED/HIGH/CRIT) and collapsible fraud pattern cards
 - **3 Gorgeous Themes**: Mission Control (dark slate blue), Neobank (charcoal with emerald), Arctic Intel (light indigo)
 - **Dashboard Analytics**: SVG-based charts showing transaction trends, processor distribution, and risk analysis
-- **Transaction Details**: Slide-in drawer with full metadata and fraud cross-referencing
+- **Transaction Details**: Slide-in drawer with full metadata, **visual risk score meter**, and fraud cross-referencing
 - **100+ Mock Transactions**: Diverse dataset with realistic fraud patterns across all 3 processors
 
 ### Fraud Detection Algorithms
@@ -64,7 +64,7 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
 
 4. **Run tests** (optional):
    ```bash
-   npm test              # Run all 229 tests
+   npm test              # Run all 280 tests
    npm run test:coverage # View coverage report (73%+)
    ```
 
@@ -75,12 +75,13 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
 ### Mock Transaction Generator
 Generate custom test data to explore fraud detection:
 1. Click the **Generator** tab in the navigation header
-2. Adjust transaction count (1-10,000), processor, and date range
-3. Set fraud pattern percentages using the sliders (must sum to 100%)
-4. Set status distribution (must sum to 100%)
-5. Click "Generate Transactions"
-6. Click "View in Query" to analyze the generated data
-7. Data persists across page refreshes (stored in sessionStorage)
+2. Adjust transaction count (1-10,000) and date range
+3. **Select processors** (Stripe, PayPal, Adyen) - choose 1-3 via toggle buttons. Transactions split evenly across selections.
+4. Set fraud pattern percentages using the sliders (must sum to 100%)
+5. Set status distribution (must sum to 100%)
+6. Click "Generate Transactions"
+7. Click "View in Query" to analyze the generated data
+8. Data persists across page refreshes (stored in sessionStorage)
 
 ### Fraud Detection Queries
 Try these natural language queries to see fraud detection in action:
@@ -110,11 +111,11 @@ Try these natural language queries to see fraud detection in action:
 - **Frontend**: Next.js 14 with React, TypeScript, and Tailwind CSS
 - **AI/ML**: Claude 3.5 Sonnet (Haiku 4.5) via Anthropic SDK with structured JSON responses
 - **Data Sources**: Stripe MCP + PayPal Mock + Adyen Mock clients
-- **Fraud Detection**: Custom pattern analysis algorithms
-- **Testing**: Jest + ts-jest with 73%+ code coverage (229 tests)
+- **Fraud Detection**: Custom pattern analysis algorithms with risk scoring (LOW/MED/HIGH/CRIT levels)
+- **Testing**: Jest + ts-jest with 73%+ code coverage (280 tests)
 - **UI Components**: Lucide React for icons, custom SVG charts
 - **Theming**: 3 themes with CSS custom properties and localStorage persistence
-- **Test Data**: Configurable mock transaction generator
+- **Test Data**: Configurable mock transaction generator with multi-processor support
 
 ### Key Components
 
@@ -145,7 +146,8 @@ Try these natural language queries to see fraud detection in action:
    - Risk levels (Critical, High, Medium, Low) with click-to-filter functionality
 
 6. **Data Table** (`src/components/DataTable.tsx`)
-   - Sortable columns for all transaction fields
+   - Sortable columns for all transaction fields including **risk score**
+   - Color-coded risk score column (LOW=green, MED=yellow, HIGH=orange, CRIT=red)
    - Status indicators with color coding
    - Responsive design with proper data formatting
 
@@ -162,6 +164,7 @@ Try these natural language queries to see fraud detection in action:
 
 9. **Mock Transaction Generator** (`src/components/MockTransactionGenerator.tsx`)
    - Dedicated `/generator` page with full-width layout
+   - **Multi-processor selection** with toggle buttons (select 1-3 processors, transactions split evenly)
    - Configurable fraud pattern mixing (8 patterns + legitimate) - 3-column layout
    - Adjustable status distribution (4-column layout)
    - Live validation with real-time total indicators
@@ -231,12 +234,13 @@ npm run test:watch    # Watch mode for development
 npm run test:coverage # Generate HTML coverage report
 ```
 
-**Test Coverage**: 229 tests across 6 test files covering:
+**Test Coverage**: 280 tests across 7 test files covering:
 - Error handling utilities
 - Fraud detection algorithms (8 patterns)
-- Mock transaction generator
+- Mock transaction generator with multi-processor tests
 - Claude query processing
 - PayPal and Adyen mock clients
+- Analytics utility functions
 
 ## Troubleshooting
 

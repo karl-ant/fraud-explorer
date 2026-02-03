@@ -66,6 +66,24 @@ module.exports = {
           },
         },
 
+        processor: {
+          stripe: {
+            bg: rgb('processor-stripe-bg'),
+            border: rgb('processor-stripe-border'),
+            text: rgb('processor-stripe-text'),
+          },
+          paypal: {
+            bg: rgb('processor-paypal-bg'),
+            border: rgb('processor-paypal-border'),
+            text: rgb('processor-paypal-text'),
+          },
+          adyen: {
+            bg: rgb('processor-adyen-bg'),
+            border: rgb('processor-adyen-border'),
+            text: rgb('processor-adyen-text'),
+          },
+        },
+
         status: {
           success: {
             glow: rgb('status-success-glow'),
