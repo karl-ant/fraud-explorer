@@ -77,9 +77,9 @@ export default function TransactionDrawer({ transaction, fraudPatterns, onClose 
     : null
 
   const processorColor: Record<string, string> = {
-    stripe: 'bg-terminal-900/50 border-terminal-500/30 text-terminal-300',
-    paypal: 'bg-blue-900/20 border-blue-500/30 text-blue-300',
-    adyen: 'bg-purple-900/20 border-purple-500/30 text-purple-300',
+    stripe: 'bg-processor-stripe-bg border-processor-stripe-border text-processor-stripe-text',
+    paypal: 'bg-processor-paypal-bg border-processor-paypal-border text-processor-paypal-text',
+    adyen: 'bg-processor-adyen-bg border-processor-adyen-border text-processor-adyen-text',
   }
 
   return (
@@ -138,7 +138,7 @@ export default function TransactionDrawer({ transaction, fraudPatterns, onClose 
                 <div className="space-y-2">
                   <div className="flex items-baseline gap-3">
                     <span className="text-2xl font-mono font-bold text-text-primary">{score}</span>
-                    <span className={`px-2 py-0.5 rounded border text-xs font-medium uppercase ${getRiskBadge(riskLevel)}`}>
+                    <span className={`px-2 py-0.5 rounded border text-xs font-medium uppercase tracking-wider ${getRiskBadge(riskLevel)}`}>
                       {riskLabel}
                     </span>
                   </div>

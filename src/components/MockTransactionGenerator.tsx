@@ -139,14 +139,14 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
                       : [...config.processors, proc]
                     setConfig({ ...config, processors: next as ProcessorType[] })
                   }}
-                  className={`flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all
+                  className={`flex-1 px-4 py-3 text-sm font-medium uppercase tracking-wider rounded-lg transition-all
                             ${isActive
                               ? 'bg-terminal-500 text-white shadow-glow'
                               : 'bg-space-700 text-text-secondary hover:text-text-primary'
                             }
                             ${isLastActive ? 'opacity-70 cursor-not-allowed' : ''}`}
                 >
-                  {proc.charAt(0).toUpperCase() + proc.slice(1)}
+                  {proc}
                 </button>
               )
             })}

@@ -270,12 +270,12 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
                   {/* Processor Column */}
                   <td className="px-4 py-3">
                     {transaction.processor ? (
-                      <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium uppercase
+                      <span className={`inline-flex items-center px-2 py-1 rounded border text-xs font-medium uppercase
                         ${transaction.processor === 'stripe'
-                          ? 'bg-terminal-900/50 border border-terminal-500/30 text-terminal-300'
+                          ? 'bg-processor-stripe-bg border-processor-stripe-border text-processor-stripe-text'
                           : transaction.processor === 'paypal'
-                          ? 'bg-blue-900/20 border border-blue-500/30 text-blue-300'
-                          : 'bg-purple-900/20 border border-purple-500/30 text-purple-300'
+                          ? 'bg-processor-paypal-bg border-processor-paypal-border text-processor-paypal-text'
+                          : 'bg-processor-adyen-bg border-processor-adyen-border text-processor-adyen-text'
                         }`}>
                         {transaction.processor}
                       </span>
