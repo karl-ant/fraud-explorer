@@ -1,13 +1,20 @@
 # Fraud Explorer
 
-> **Version**: 1.4.1 | **Last Updated**: 2026-02-02
+> **Version**: 1.5.0 | **Last Updated**: 2026-02-03
 
 ## Critical Instructions
 - Do not use the public npm registry, only the internal registry
 - Do not use esbuild (blocked by Anthropic policy) - use Jest for testing
 - Always run the app on port 3006
 
-## Recent Changes (v1.4.1)
+## Recent Changes (v1.5.0)
+- **Risk Score UI**: Color-coded risk score column in DataTable (sortable, 4 levels: LOW/MED/HIGH/CRIT) with theme-aware styling
+- **Risk Score in Drawer**: TransactionDrawer shows risk score with visual progress bar and level badge
+- **Multi-Processor Generator**: Generator supports multiple processor selection (checkboxes, 1-3 processors). Transactions split evenly across selected processors.
+- **ProcessorType Export**: `mock-generator.ts` now exports `ProcessorType` for external use
+- **Test Coverage Expansion**: 47 tests in `mock-generator.test.ts` (5 new multi-processor tests), 280 total tests across all files
+
+### Previous (v1.4.1)
 - **Theme Switcher**: 3 themes (Mission Control, Neobank, Arctic Intel) with dropdown in Navigation header
 - **ThemeContext**: React Context at `src/context/ThemeContext.tsx` with localStorage persistence
 - **CSS Variables**: RGB triplet format for Tailwind opacity support (e.g., `rgb(var(--space-deep))`)
@@ -140,7 +147,8 @@ Located at `/generator` route. Uses `src/lib/mock-generator.ts` and `src/compone
 
 ### Features
 - Configurable transaction count (1-10,000)
-- Processor selection (Stripe, PayPal, Adyen)
+- **Multi-processor selection** (Stripe, PayPal, Adyen) - select 1-3 processors via toggle buttons
+- Transactions **split evenly** across selected processors (e.g., 100 txns across 2 processors = 50 each)
 - Date range selection
 - Fraud pattern mix (8 patterns + legitimate) - 3-column layout
 - Status distribution (succeeded, failed, pending, canceled) - 4-column layout
@@ -148,6 +156,7 @@ Located at `/generator` route. Uses `src/lib/mock-generator.ts` and `src/compone
 - SessionStorage persistence across page refreshes
 
 ### Validation
+- At least 1 processor must be selected
 - Fraud mix must sum to 100% (live indicator turns red if invalid)
 - Status distribution must sum to 100% (live indicator turns red if invalid)
 - All percentages must be 0-100
@@ -228,9 +237,10 @@ Collapsible sections use CSS grid-based animations:
 - **Navigation**: Header with "Query", "Dashboard", and "Generator" tabs; transaction count badge; theme dropdown selector
 - **QueryInterface**: Example queries collapsed by default, toggle via accordion header
 - **FraudPatterns**: Pattern cards show compact headers (icon, name, badge, count), expand to show full details
-- **MockTransactionGenerator**: Full-page form with live validation, 3-col fraud mix, 4-col status distribution
+- **MockTransactionGenerator**: Full-page form with multi-processor selection, live validation, 3-col fraud mix, 4-col status distribution
 - **Dashboard**: SVG charts (DonutChart, BarChart, StatCard) with theme-aware colors
-- **TransactionDrawer**: Slide-in panel with full transaction details and fraud analysis
+- **DataTable**: Sortable columns including **risk score column** with color-coded levels (LOW=green, MED=yellow, HIGH=orange, CRIT=red)
+- **TransactionDrawer**: Slide-in panel with full transaction details, **risk score section** with progress bar, and fraud analysis
 
 ## Testing
 
@@ -249,10 +259,11 @@ npm run test:coverage # Generate coverage report
 |------|-------|-------------|
 | `error-handler.test.ts` | 17 | AppError class and handleApiError function |
 | `fraud-detector.test.ts` | 36 | 8 fraud detection algorithms |
-| `mock-generator.test.ts` | 42 | Generator validation and transaction generation |
+| `mock-generator.test.ts` | 47 | Generator validation, transaction generation, multi-processor tests |
 | `claude.test.ts` | 32 | Query processing, markdown stripping, error handling |
 | `adyen-mock.test.ts` | 73 | Adyen client filtering and fraud patterns |
 | `paypal-mock.test.ts` | 64 | PayPal client filtering and fraud patterns |
+| `analytics.test.ts` | 15 | Analytics utility functions |
 
 ### Coverage
 - **Statements**: 73%+

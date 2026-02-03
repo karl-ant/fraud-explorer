@@ -5,6 +5,26 @@ All notable changes to Fraud Explorer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-02-03
+
+### Added
+- **Risk Score UI Column** - Color-coded risk score column in DataTable with sortable functionality
+  - 4 risk levels: LOW (green), MED (yellow), HIGH (orange), CRIT (red)
+  - Theme-aware styling adapts to active theme
+- **Risk Score in TransactionDrawer** - Visual risk score section with progress bar and level badge
+- **Multi-Processor Generator** - Select multiple payment processors (Stripe, PayPal, Adyen) when generating transactions
+  - Toggle button UI allows selecting 1-3 processors simultaneously
+  - Transactions automatically split evenly across selected processors
+  - Generator config changed from `processor: string` to `processors: string[]`
+- **ProcessorType Export** - `mock-generator.ts` now exports `ProcessorType` type for external use
+- **Multi-Processor Tests** - 5 new tests validating multi-processor transaction generation (47 total in mock-generator.test.ts)
+
+### Changed
+- `GeneratorConfig` interface: `processor` field replaced with `processors` array
+- `generateMockTransactions()` now accepts array of processors and distributes transactions evenly
+- DataTable includes risk score as a sortable column alongside existing fields
+- Total test count increased from 229 to 280 across all test files
+
 ## [1.4.1] - 2026-02-02
 
 ### Added
