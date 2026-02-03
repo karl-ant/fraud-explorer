@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, AlertCircle, ExternalLink, Database } from 'lucide-react'
+import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, AlertCircle, ExternalLink, Database, ShieldAlert } from 'lucide-react'
 import { TransactionData } from '@/types'
 
 interface DataTableProps {
@@ -9,7 +9,7 @@ interface DataTableProps {
   onSelectTransaction?: (transaction: TransactionData) => void
 }
 
-type SortField = keyof TransactionData
+type SortField = keyof TransactionData | 'risk_score'
 type SortDirection = 'asc' | 'desc'
 
 const PAGE_SIZE_OPTIONS = [25, 50, 100] as const
@@ -29,10 +29,26 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
     }
   }
 
+  const getRiskScore = (t: TransactionData): number => parseInt(t.metadata?.risk_score) || 0
+
+  const getRiskConfig = (score: number) => {
+    if (score >= 85) return { label: 'CRIT', className: 'bg-risk-critical-bg border-risk-critical-border text-risk-critical-text' }
+    if (score >= 70) return { label: 'HIGH', className: 'bg-risk-high-bg border-risk-high-border text-risk-high-text' }
+    if (score >= 40) return { label: 'MED', className: 'bg-risk-medium-bg border-risk-medium-border text-risk-medium-text' }
+    return { label: 'LOW', className: 'bg-risk-low-bg border-risk-low-border text-risk-low-text' }
+  }
+
   const sortedData = useMemo(() => {
     return [...data].sort((a, b) => {
-      const aValue = a[sortField]
-      const bValue = b[sortField]
+      if (sortField === 'risk_score') {
+        const aScore = getRiskScore(a)
+        const bScore = getRiskScore(b)
+        const comparison = aScore - bScore
+        return sortDirection === 'asc' ? comparison : -comparison
+      }
+
+      const aValue = a[sortField as keyof TransactionData]
+      const bValue = b[sortField as keyof TransactionData]
 
       if (aValue === bValue) return 0
       if (aValue == null) return 1
@@ -189,6 +205,13 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
                 </SortButton>
               </th>
               <th className="px-4 py-3 text-left">
+                <SortButton field="risk_score">
+                  <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
+                    Risk
+                  </span>
+                </SortButton>
+              </th>
+              <th className="px-4 py-3 text-left">
                 <SortButton field="created">
                   <span className="text-xs font-mono font-semibold uppercase tracking-wider text-text-secondary">
                     Timestamp
@@ -279,6 +302,22 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
                         {transaction.original_status || transaction.status}
                       </span>
                     </div>
+                  </td>
+
+                  {/* Risk Score Column */}
+                  <td className="px-4 py-3">
+                    {transaction.metadata?.risk_score ? (() => {
+                      const score = parseInt(transaction.metadata.risk_score)
+                      const riskConfig = getRiskConfig(score)
+                      return (
+                        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-mono font-medium ${riskConfig.className}`}>
+                          <ShieldAlert className="h-3 w-3" />
+                          <span>{score}</span>
+                        </div>
+                      )
+                    })() : (
+                      <span className="text-text-tertiary text-sm">—</span>
+                    )}
                   </td>
 
                   {/* Date Column */}

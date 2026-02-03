@@ -1,8 +1,10 @@
 import { TransactionData } from '@/types'
 
+export type ProcessorType = 'stripe' | 'paypal' | 'adyen'
+
 export interface GeneratorConfig {
   count: number
-  processor: 'stripe' | 'paypal' | 'adyen'
+  processors: ProcessorType[]
   dateRange: {
     start: Date
     end: Date
@@ -35,6 +37,11 @@ export class MockTransactionGenerator {
       throw new Error('Transaction count must be between 1 and 10,000')
     }
 
+    // Validate processors
+    if (!config.processors || config.processors.length === 0) {
+      throw new Error('At least one processor must be selected')
+    }
+
     // Validate fraud mix sums to 100%
     const fraudTotal = Object.values(config.fraudMix).reduce((sum, val) => sum + val, 0)
     if (Math.abs(fraudTotal - 100) > 0.01) {
@@ -65,29 +72,50 @@ export class MockTransactionGenerator {
   }
 
   generate(): TransactionData[] {
-    const transactions: TransactionData[] = []
+    const allTransactions: TransactionData[] = []
+    const processors = this.config.processors
+    const totalCount = this.config.count
 
-    // Calculate how many transactions for each pattern
-    const total = this.config.count
+    // Split count evenly across processors, give remainder to the last one
+    const perProcessor = Math.floor(totalCount / processors.length)
+    const remainder = totalCount % processors.length
+
+    processors.forEach((processor, idx) => {
+      const count = perProcessor + (idx < remainder ? 1 : 0)
+      if (count === 0) return
+
+      const transactions = this.generateForProcessor(processor, count)
+      allTransactions.push(...transactions)
+    })
+
+    // Apply status distribution and date range across all transactions
+    this.applyStatusDistribution(allTransactions)
+    this.applyDateRange(allTransactions)
+
+    // Shuffle so processors are interleaved
+    this.shuffle(allTransactions)
+
+    return allTransactions
+  }
+
+  private generateForProcessor(processor: ProcessorType, total: number): TransactionData[] {
+    const transactions: TransactionData[] = []
     const fraudCount = Math.floor(total * (100 - this.config.fraudMix.legitimate) / 100)
     const legitimateCount = total - fraudCount
 
-    // Generate fraud patterns based on percentages
     const fraudTypes = [
-      { type: 'cardTesting', pct: this.config.fraudMix.cardTesting, generator: this.generateCardTesting.bind(this) },
-      { type: 'velocityFraud', pct: this.config.fraudMix.velocityFraud, generator: this.generateVelocityFraud.bind(this) },
-      { type: 'highRiskCountry', pct: this.config.fraudMix.highRiskCountry, generator: this.generateHighRiskCountry.bind(this) },
-      { type: 'roundNumber', pct: this.config.fraudMix.roundNumber, generator: this.generateRoundNumber.bind(this) },
-      { type: 'retryAttack', pct: this.config.fraudMix.retryAttack, generator: this.generateRetryAttack.bind(this) },
-      { type: 'cryptoFraud', pct: this.config.fraudMix.cryptoFraud, generator: this.generateCryptoFraud.bind(this) },
-      { type: 'nightTime', pct: this.config.fraudMix.nightTime, generator: this.generateNightTime.bind(this) },
-      { type: 'highValue', pct: this.config.fraudMix.highValue, generator: this.generateHighValue.bind(this) },
+      { type: 'cardTesting', pct: this.config.fraudMix.cardTesting, generator: (n: number) => this.generateCardTesting(n, processor) },
+      { type: 'velocityFraud', pct: this.config.fraudMix.velocityFraud, generator: (n: number) => this.generateVelocityFraud(n, processor) },
+      { type: 'highRiskCountry', pct: this.config.fraudMix.highRiskCountry, generator: (n: number) => this.generateHighRiskCountry(n, processor) },
+      { type: 'roundNumber', pct: this.config.fraudMix.roundNumber, generator: (n: number) => this.generateRoundNumber(n, processor) },
+      { type: 'retryAttack', pct: this.config.fraudMix.retryAttack, generator: (n: number) => this.generateRetryAttack(n, processor) },
+      { type: 'cryptoFraud', pct: this.config.fraudMix.cryptoFraud, generator: (n: number) => this.generateCryptoFraud(n, processor) },
+      { type: 'nightTime', pct: this.config.fraudMix.nightTime, generator: (n: number) => this.generateNightTime(n, processor) },
+      { type: 'highValue', pct: this.config.fraudMix.highValue, generator: (n: number) => this.generateHighValue(n, processor) },
     ]
 
-    // Calculate total fraud percentage
     const totalFraudPct = fraudTypes.reduce((sum, ft) => sum + ft.pct, 0)
 
-    // Generate fraud transactions
     fraudTypes.forEach(fraudType => {
       if (totalFraudPct > 0) {
         const count = Math.floor(fraudCount * (fraudType.pct / totalFraudPct))
@@ -97,31 +125,24 @@ export class MockTransactionGenerator {
       }
     })
 
-    // Generate legitimate transactions
     if (legitimateCount > 0) {
-      transactions.push(...this.generateLegitimate(legitimateCount))
+      transactions.push(...this.generateLegitimate(legitimateCount, processor))
     }
-
-    // Apply status distribution
-    this.applyStatusDistribution(transactions)
-
-    // Apply date range
-    this.applyDateRange(transactions)
 
     return transactions
   }
 
-  private generateCardTesting(count: number): TransactionData[] {
+  private generateCardTesting(count: number, processor: ProcessorType): TransactionData[] {
     const transactions: TransactionData[] = []
     const now = Math.floor(Date.now() / 1000)
 
     for (let i = 0; i < count; i++) {
       transactions.push({
-        id: `${this.getProcessorPrefix()}_ct_${this.randomId()}`,
+        id: `${this.getProcessorPrefix(processor)}_ct_${this.randomId()}`,
         amount: Math.floor(Math.random() * 300) + 50, // $0.50-$3.50
-        currency: this.getCurrency(),
+        currency: this.getCurrency(processor),
         status: 'failed',
-        processor: this.config.processor,
+        processor,
         created: now - Math.floor(Math.random() * 3600),
         customer: `cus_test_${i % 3}`,
         description: 'Card validation',
@@ -138,17 +159,17 @@ export class MockTransactionGenerator {
     return transactions
   }
 
-  private generateVelocityFraud(count: number): TransactionData[] {
+  private generateVelocityFraud(count: number, processor: ProcessorType): TransactionData[] {
     const transactions: TransactionData[] = []
     const now = Math.floor(Date.now() / 1000)
 
     for (let i = 0; i < count; i++) {
       transactions.push({
-        id: `${this.getProcessorPrefix()}_vel_${this.randomId()}`,
+        id: `${this.getProcessorPrefix(processor)}_vel_${this.randomId()}`,
         amount: Math.floor(Math.random() * 5000) + 1000, // $10-$60
-        currency: this.getCurrency(),
+        currency: this.getCurrency(processor),
         status: 'succeeded',
-        processor: this.config.processor,
+        processor,
         created: now - Math.floor(Math.random() * 1800),
         customer: `cus_velocity_${i % 2}`,
         description: 'Digital goods purchase',
@@ -166,7 +187,7 @@ export class MockTransactionGenerator {
     return transactions
   }
 
-  private generateHighRiskCountry(count: number): TransactionData[] {
+  private generateHighRiskCountry(count: number, processor: ProcessorType): TransactionData[] {
     const transactions: TransactionData[] = []
     const now = Math.floor(Date.now() / 1000)
     const countries = ['NG', 'GH', 'ID', 'PK', 'BD', 'VN']
@@ -174,11 +195,11 @@ export class MockTransactionGenerator {
     for (let i = 0; i < count; i++) {
       const country = countries[i % countries.length]
       transactions.push({
-        id: `${this.getProcessorPrefix()}_hrisk_${this.randomId()}`,
+        id: `${this.getProcessorPrefix(processor)}_hrisk_${this.randomId()}`,
         amount: Math.floor(Math.random() * 100000) + 50000, // $500-$1500
-        currency: this.getCurrency(),
+        currency: this.getCurrency(processor),
         status: 'succeeded',
-        processor: this.config.processor,
+        processor,
         created: now - Math.floor(Math.random() * 7200),
         customer: `cus_highrisk_${i}`,
         description: 'International purchase',
@@ -195,18 +216,18 @@ export class MockTransactionGenerator {
     return transactions
   }
 
-  private generateRoundNumber(count: number): TransactionData[] {
+  private generateRoundNumber(count: number, processor: ProcessorType): TransactionData[] {
     const transactions: TransactionData[] = []
     const now = Math.floor(Date.now() / 1000)
     const roundAmounts = [500000, 1000000, 250000, 750000, 2000000]
 
     for (let i = 0; i < count; i++) {
       transactions.push({
-        id: `${this.getProcessorPrefix()}_round_${this.randomId()}`,
+        id: `${this.getProcessorPrefix(processor)}_round_${this.randomId()}`,
         amount: roundAmounts[i % roundAmounts.length],
-        currency: this.getCurrency(),
+        currency: this.getCurrency(processor),
         status: 'succeeded',
-        processor: this.config.processor,
+        processor,
         created: now - Math.floor(Math.random() * 10800),
         customer: `cus_round_${i}`,
         description: 'Business transaction',
@@ -223,17 +244,17 @@ export class MockTransactionGenerator {
     return transactions
   }
 
-  private generateRetryAttack(count: number): TransactionData[] {
+  private generateRetryAttack(count: number, processor: ProcessorType): TransactionData[] {
     const transactions: TransactionData[] = []
     const now = Math.floor(Date.now() / 1000)
 
     for (let i = 0; i < count; i++) {
       transactions.push({
-        id: `${this.getProcessorPrefix()}_retry_${this.randomId()}`,
+        id: `${this.getProcessorPrefix(processor)}_retry_${this.randomId()}`,
         amount: 25000, // $250
-        currency: this.getCurrency(),
+        currency: this.getCurrency(processor),
         status: (i % 3 === 0 ? 'succeeded' : 'failed') as 'succeeded' | 'failed',
-        processor: this.config.processor,
+        processor,
         created: now - Math.floor(Math.random() * 1800),
         customer: `cus_retry_${i % 2}`,
         description: 'Subscription renewal',
@@ -251,17 +272,17 @@ export class MockTransactionGenerator {
     return transactions
   }
 
-  private generateCryptoFraud(count: number): TransactionData[] {
+  private generateCryptoFraud(count: number, processor: ProcessorType): TransactionData[] {
     const transactions: TransactionData[] = []
     const now = Math.floor(Date.now() / 1000)
 
     for (let i = 0; i < count; i++) {
       transactions.push({
-        id: `${this.getProcessorPrefix()}_crypto_${this.randomId()}`,
+        id: `${this.getProcessorPrefix(processor)}_crypto_${this.randomId()}`,
         amount: Math.floor(Math.random() * 500000) + 300000, // $3k-$8k
-        currency: this.getCurrency(),
+        currency: this.getCurrency(processor),
         status: 'succeeded',
-        processor: this.config.processor,
+        processor,
         created: now - Math.floor(Math.random() * 3600),
         customer: i % 2 === 0 ? `cus_crypto_${i}` : undefined,
         description: 'Cryptocurrency exchange',
@@ -279,18 +300,18 @@ export class MockTransactionGenerator {
     return transactions
   }
 
-  private generateNightTime(count: number): TransactionData[] {
+  private generateNightTime(count: number, processor: ProcessorType): TransactionData[] {
     const transactions: TransactionData[] = []
     const now = Math.floor(Date.now() / 1000)
     const nightTime = now - (now % 86400) + (3 * 3600) // 3 AM
 
     for (let i = 0; i < count; i++) {
       transactions.push({
-        id: `${this.getProcessorPrefix()}_night_${this.randomId()}`,
+        id: `${this.getProcessorPrefix(processor)}_night_${this.randomId()}`,
         amount: Math.floor(Math.random() * 40000) + 10000, // $100-$500
-        currency: this.getCurrency(),
+        currency: this.getCurrency(processor),
         status: 'succeeded',
-        processor: this.config.processor,
+        processor,
         created: nightTime + (i * 300),
         customer: `cus_night_${i}`,
         description: 'Late night purchase',
@@ -308,17 +329,17 @@ export class MockTransactionGenerator {
     return transactions
   }
 
-  private generateHighValue(count: number): TransactionData[] {
+  private generateHighValue(count: number, processor: ProcessorType): TransactionData[] {
     const transactions: TransactionData[] = []
     const now = Math.floor(Date.now() / 1000)
 
     for (let i = 0; i < count; i++) {
       transactions.push({
-        id: `${this.getProcessorPrefix()}_hval_${this.randomId()}`,
+        id: `${this.getProcessorPrefix(processor)}_hval_${this.randomId()}`,
         amount: Math.floor(Math.random() * 1000000) + 500000, // $5k-$15k
-        currency: this.getCurrency(),
+        currency: this.getCurrency(processor),
         status: 'succeeded',
-        processor: this.config.processor,
+        processor,
         created: now - Math.floor(Math.random() * 7200),
         customer: `cus_highval_${i}`,
         description: 'High-value purchase',
@@ -335,18 +356,18 @@ export class MockTransactionGenerator {
     return transactions
   }
 
-  private generateLegitimate(count: number): TransactionData[] {
+  private generateLegitimate(count: number, processor: ProcessorType): TransactionData[] {
     const transactions: TransactionData[] = []
     const now = Math.floor(Date.now() / 1000)
     const normalAmounts = [1299, 4599, 789, 2150, 3500, 899, 1650, 5200]
 
     for (let i = 0; i < count; i++) {
       transactions.push({
-        id: `${this.getProcessorPrefix()}_legit_${this.randomId()}`,
+        id: `${this.getProcessorPrefix(processor)}_legit_${this.randomId()}`,
         amount: normalAmounts[i % normalAmounts.length] * 100,
-        currency: this.getCurrency(),
+        currency: this.getCurrency(processor),
         status: 'succeeded',
-        processor: this.config.processor,
+        processor,
         created: now - Math.floor(Math.random() * 86400 * 7),
         customer: `cus_legit_${i}`,
         description: ['Online purchase', 'Subscription', 'Digital download', 'Service fee'][i % 4],
@@ -401,16 +422,16 @@ export class MockTransactionGenerator {
     })
   }
 
-  private getProcessorPrefix(): string {
-    switch (this.config.processor) {
+  private getProcessorPrefix(processor: ProcessorType): string {
+    switch (processor) {
       case 'stripe': return 'ch'
       case 'paypal': return 'pp'
       case 'adyen': return 'ady'
     }
   }
 
-  private getCurrency(): string {
-    switch (this.config.processor) {
+  private getCurrency(processor: ProcessorType): string {
+    switch (processor) {
       case 'stripe': return 'usd'
       case 'paypal': return 'usd'
       case 'adyen': return 'eur'

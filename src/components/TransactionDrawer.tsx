@@ -122,6 +122,37 @@ export default function TransactionDrawer({ transaction, fraudPatterns, onClose 
             </div>
           </Section>
 
+          {/* Risk Score */}
+          {transaction.metadata?.risk_score && (() => {
+            const score = parseInt(transaction.metadata.risk_score)
+            const riskLevel = score >= 85 ? 'critical' : score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low'
+            const riskLabel = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)
+            const barColor = {
+              critical: 'bg-[rgb(var(--risk-critical-text))]',
+              high: 'bg-[rgb(var(--risk-high-text))]',
+              medium: 'bg-[rgb(var(--risk-medium-text))]',
+              low: 'bg-[rgb(var(--risk-low-text))]',
+            }[riskLevel]
+            return (
+              <Section title="Risk Score">
+                <div className="space-y-2">
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-2xl font-mono font-bold text-text-primary">{score}</span>
+                    <span className={`px-2 py-0.5 rounded border text-xs font-medium uppercase ${getRiskBadge(riskLevel)}`}>
+                      {riskLabel}
+                    </span>
+                  </div>
+                  <div className="w-full h-2 bg-space-700 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${barColor}`}
+                      style={{ width: `${Math.min(score, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              </Section>
+            )
+          })()}
+
           {/* Timeline */}
           <Section title="Created">
             <span className="font-mono text-sm text-text-primary">{dt.time}</span>

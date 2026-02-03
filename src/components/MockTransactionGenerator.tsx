@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Wand2, Loader2, AlertTriangle } from 'lucide-react'
-import { GeneratorConfig, MockTransactionGenerator } from '@/lib/mock-generator'
+import { GeneratorConfig, MockTransactionGenerator, ProcessorType } from '@/lib/mock-generator'
 import { TransactionData } from '@/types'
 
 interface MockTransactionGeneratorProps {
@@ -12,7 +12,7 @@ interface MockTransactionGeneratorProps {
 export default function MockTransactionGeneratorComponent({ onTransactionsGenerated }: MockTransactionGeneratorProps) {
   const [config, setConfig] = useState<GeneratorConfig>({
     count: 100,
-    processor: 'paypal',
+    processors: ['stripe', 'paypal', 'adyen'],
     dateRange: {
       start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
       end: new Date()
@@ -46,6 +46,7 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
   const isValidStatusDist = Math.abs(statusTotal - 100) < 0.1
   const isValidCount = config.count >= 1 && config.count <= 10000
   const isValidDateRange = config.dateRange.start < config.dateRange.end
+  const isValidProcessors = config.processors.length > 0
 
   const handleGenerate = () => {
     // Validate before generation
@@ -63,6 +64,10 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
     }
     if (!isValidDateRange) {
       setValidationError('Start date must be before end date')
+      return
+    }
+    if (!isValidProcessors) {
+      setValidationError('At least one processor must be selected')
       return
     }
 
@@ -115,25 +120,36 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
           />
         </div>
 
-        {/* Processor Selection */}
+        {/* Processor Selection (Multi-Select) */}
         <div>
           <label className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2 block">
-            Processor
+            Processors
           </label>
           <div className="flex space-x-2">
-            {(['stripe', 'paypal', 'adyen'] as const).map((proc) => (
-              <button
-                key={proc}
-                onClick={() => setConfig({ ...config, processor: proc })}
-                className={`flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all
-                          ${config.processor === proc
-                            ? 'bg-terminal-500 text-white shadow-glow'
-                            : 'bg-space-700 text-text-secondary hover:text-text-primary'
-                          }`}
-              >
-                {proc.charAt(0).toUpperCase() + proc.slice(1)}
-              </button>
-            ))}
+            {(['stripe', 'paypal', 'adyen'] as const).map((proc) => {
+              const isActive = config.processors.includes(proc)
+              const isLastActive = isActive && config.processors.length === 1
+              return (
+                <button
+                  key={proc}
+                  disabled={isLastActive}
+                  onClick={() => {
+                    const next = isActive
+                      ? config.processors.filter(p => p !== proc)
+                      : [...config.processors, proc]
+                    setConfig({ ...config, processors: next as ProcessorType[] })
+                  }}
+                  className={`flex-1 px-4 py-3 text-sm font-medium rounded-lg transition-all
+                            ${isActive
+                              ? 'bg-terminal-500 text-white shadow-glow'
+                              : 'bg-space-700 text-text-secondary hover:text-text-primary'
+                            }
+                            ${isLastActive ? 'opacity-70 cursor-not-allowed' : ''}`}
+                >
+                  {proc.charAt(0).toUpperCase() + proc.slice(1)}
+                </button>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -267,7 +283,7 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
       {/* Generate Button */}
       <button
         onClick={handleGenerate}
-        disabled={generating || !isValidFraudMix || !isValidStatusDist || !isValidCount || !isValidDateRange}
+        disabled={generating || !isValidFraudMix || !isValidStatusDist || !isValidCount || !isValidDateRange || !isValidProcessors}
         className="w-full px-6 py-3 bg-terminal-500 hover:bg-terminal-600
                  text-white font-semibold rounded-lg
                  shadow-glow hover:shadow-glow-lg

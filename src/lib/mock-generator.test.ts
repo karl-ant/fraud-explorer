@@ -3,7 +3,7 @@ import { MockTransactionGenerator, GeneratorConfig } from './mock-generator'
 // Helper to create valid default config
 const createConfig = (overrides: Partial<GeneratorConfig> = {}): GeneratorConfig => ({
   count: 100,
-  processor: 'stripe',
+  processors: ['stripe'],
   dateRange: {
     start: new Date('2024-01-01'),
     end: new Date('2024-12-31'),
@@ -277,7 +277,7 @@ describe('MockTransactionGenerator', () => {
     })
 
     it('should generate transactions with correct processor', () => {
-      const generator = new MockTransactionGenerator(createConfig({ processor: 'paypal', count: 10 }))
+      const generator = new MockTransactionGenerator(createConfig({ processors: ['paypal'], count: 10 }))
       const transactions = generator.generate()
 
       transactions.forEach(t => {
@@ -286,9 +286,9 @@ describe('MockTransactionGenerator', () => {
     })
 
     it('should generate transactions with correct processor prefix', () => {
-      const stripeGen = new MockTransactionGenerator(createConfig({ processor: 'stripe', count: 10 }))
-      const paypalGen = new MockTransactionGenerator(createConfig({ processor: 'paypal', count: 10 }))
-      const adyenGen = new MockTransactionGenerator(createConfig({ processor: 'adyen', count: 10 }))
+      const stripeGen = new MockTransactionGenerator(createConfig({ processors: ['stripe'], count: 10 }))
+      const paypalGen = new MockTransactionGenerator(createConfig({ processors: ['paypal'], count: 10 }))
+      const adyenGen = new MockTransactionGenerator(createConfig({ processors: ['adyen'], count: 10 }))
 
       const stripeTxns = stripeGen.generate()
       const paypalTxns = paypalGen.generate()
@@ -610,7 +610,7 @@ describe('MockTransactionGenerator', () => {
 
   describe('processor-specific behavior', () => {
     it('should use USD for Stripe transactions', () => {
-      const generator = new MockTransactionGenerator(createConfig({ processor: 'stripe', count: 10 }))
+      const generator = new MockTransactionGenerator(createConfig({ processors: ['stripe'], count: 10 }))
       const transactions = generator.generate()
 
       transactions.forEach(t => {
@@ -619,7 +619,7 @@ describe('MockTransactionGenerator', () => {
     })
 
     it('should use USD for PayPal transactions', () => {
-      const generator = new MockTransactionGenerator(createConfig({ processor: 'paypal', count: 10 }))
+      const generator = new MockTransactionGenerator(createConfig({ processors: ['paypal'], count: 10 }))
       const transactions = generator.generate()
 
       transactions.forEach(t => {
@@ -630,7 +630,7 @@ describe('MockTransactionGenerator', () => {
     it('should use EUR for Adyen legitimate transactions', () => {
       // Note: Some fraud patterns hardcode 'usd', so we test only legitimate transactions
       const generator = new MockTransactionGenerator(createConfig({
-        processor: 'adyen',
+        processors: ['adyen'],
         count: 20,
         fraudMix: {
           cardTesting: 0,
@@ -698,6 +698,87 @@ describe('MockTransactionGenerator', () => {
       transactions.forEach(t => {
         expect(commonCountries).toContain(t.metadata?.country)
       })
+    })
+  })
+
+  describe('multi-processor generation', () => {
+    it('should reject empty processors array', () => {
+      expect(() => new MockTransactionGenerator(createConfig({ processors: [] }))).toThrow(
+        'At least one processor must be selected'
+      )
+    })
+
+    it('should generate transactions across all selected processors', () => {
+      const generator = new MockTransactionGenerator(createConfig({
+        processors: ['stripe', 'paypal', 'adyen'],
+        count: 90,
+      }))
+      const transactions = generator.generate()
+
+      const processors = new Set(transactions.map(t => t.processor))
+      expect(processors).toContain('stripe')
+      expect(processors).toContain('paypal')
+      expect(processors).toContain('adyen')
+    })
+
+    it('should split count roughly evenly across processors', () => {
+      const generator = new MockTransactionGenerator(createConfig({
+        processors: ['stripe', 'paypal', 'adyen'],
+        count: 90,
+        fraudMix: {
+          cardTesting: 0, velocityFraud: 0, highRiskCountry: 0, roundNumber: 0,
+          retryAttack: 0, cryptoFraud: 0, nightTime: 0, highValue: 0, legitimate: 100,
+        },
+      }))
+      const transactions = generator.generate()
+
+      const stripeTxns = transactions.filter(t => t.processor === 'stripe')
+      const paypalTxns = transactions.filter(t => t.processor === 'paypal')
+      const adyenTxns = transactions.filter(t => t.processor === 'adyen')
+
+      expect(stripeTxns.length).toBe(30)
+      expect(paypalTxns.length).toBe(30)
+      expect(adyenTxns.length).toBe(30)
+    })
+
+    it('should use correct prefix and currency per processor', () => {
+      const generator = new MockTransactionGenerator(createConfig({
+        processors: ['stripe', 'paypal', 'adyen'],
+        count: 30,
+        fraudMix: {
+          cardTesting: 0, velocityFraud: 0, highRiskCountry: 0, roundNumber: 0,
+          retryAttack: 0, cryptoFraud: 0, nightTime: 0, highValue: 0, legitimate: 100,
+        },
+      }))
+      const transactions = generator.generate()
+
+      transactions.filter(t => t.processor === 'stripe').forEach(t => {
+        expect(t.id).toMatch(/^ch_/)
+        expect(t.currency).toBe('usd')
+      })
+      transactions.filter(t => t.processor === 'paypal').forEach(t => {
+        expect(t.id).toMatch(/^pp_/)
+        expect(t.currency).toBe('usd')
+      })
+      transactions.filter(t => t.processor === 'adyen').forEach(t => {
+        expect(t.id).toMatch(/^ady_/)
+        expect(t.currency).toBe('eur')
+      })
+    })
+
+    it('should handle remainder when count not evenly divisible', () => {
+      const generator = new MockTransactionGenerator(createConfig({
+        processors: ['stripe', 'paypal', 'adyen'],
+        count: 10,
+        fraudMix: {
+          cardTesting: 0, velocityFraud: 0, highRiskCountry: 0, roundNumber: 0,
+          retryAttack: 0, cryptoFraud: 0, nightTime: 0, highValue: 0, legitimate: 100,
+        },
+      }))
+      const transactions = generator.generate()
+
+      // 10 / 3 = 3 per processor + 1 remainder -> first processor gets 4
+      expect(transactions.length).toBe(10)
     })
   })
 
