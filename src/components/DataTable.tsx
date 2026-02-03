@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react'
 import { ChevronUp, ChevronDown, ChevronLeft, ChevronRight, CheckCircle, XCircle, Clock, AlertCircle, ExternalLink, Database, ShieldAlert } from 'lucide-react'
 import { TransactionData } from '@/types'
+import { getRiskScore, getRiskLevel, getRiskBadgeConfig } from '@/lib/risk-utils'
 
 interface DataTableProps {
   data: TransactionData[]
@@ -29,20 +30,16 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
     }
   }
 
-  const getRiskScore = (t: TransactionData): number => parseInt(t.metadata?.risk_score) || 0
-
-  const getRiskConfig = (score: number) => {
-    if (score >= 85) return { label: 'CRIT', className: 'bg-risk-critical-bg border-risk-critical-border text-risk-critical-text' }
-    if (score >= 70) return { label: 'HIGH', className: 'bg-risk-high-bg border-risk-high-border text-risk-high-text' }
-    if (score >= 40) return { label: 'MED', className: 'bg-risk-medium-bg border-risk-medium-border text-risk-medium-text' }
-    return { label: 'LOW', className: 'bg-risk-low-bg border-risk-low-border text-risk-low-text' }
-  }
+  const riskScoreMap = useMemo(() => {
+    if (sortField !== 'risk_score') return null
+    return new Map(data.map(t => [t.id, getRiskScore(t)]))
+  }, [data, sortField])
 
   const sortedData = useMemo(() => {
     return [...data].sort((a, b) => {
-      if (sortField === 'risk_score') {
-        const aScore = getRiskScore(a)
-        const bScore = getRiskScore(b)
+      if (sortField === 'risk_score' && riskScoreMap) {
+        const aScore = riskScoreMap.get(a.id) || 0
+        const bScore = riskScoreMap.get(b.id) || 0
         const comparison = aScore - bScore
         return sortDirection === 'asc' ? comparison : -comparison
       }
@@ -57,7 +54,7 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
       const comparison = aValue < bValue ? -1 : 1
       return sortDirection === 'asc' ? comparison : -comparison
     })
-  }, [data, sortField, sortDirection])
+  }, [data, sortField, sortDirection, riskScoreMap])
 
   const totalPages = Math.max(1, Math.ceil(sortedData.length / pageSize))
   const safePage = Math.min(currentPage, totalPages)
@@ -307,10 +304,10 @@ export default function DataTable({ data, onSelectTransaction }: DataTableProps)
                   {/* Risk Score Column */}
                   <td className="px-4 py-3">
                     {transaction.metadata?.risk_score ? (() => {
-                      const score = parseInt(transaction.metadata.risk_score)
-                      const riskConfig = getRiskConfig(score)
+                      const score = getRiskScore(transaction)
+                      const badgeConfig = getRiskBadgeConfig(getRiskLevel(score))
                       return (
-                        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-mono font-medium ${riskConfig.className}`}>
+                        <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded border text-xs font-mono font-medium ${badgeConfig.className}`}>
                           <ShieldAlert className="h-3 w-3" />
                           <span>{score}</span>
                         </div>

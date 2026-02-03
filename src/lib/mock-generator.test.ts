@@ -782,6 +782,73 @@ describe('MockTransactionGenerator', () => {
     })
   })
 
+  describe('risk score ranges per fraud type', () => {
+    const fraudOnlyConfig = (fraudKey: string) => createConfig({
+      count: 50,
+      fraudMix: {
+        cardTesting: fraudKey === 'cardTesting' ? 100 : 0,
+        velocityFraud: fraudKey === 'velocityFraud' ? 100 : 0,
+        highRiskCountry: fraudKey === 'highRiskCountry' ? 100 : 0,
+        roundNumber: fraudKey === 'roundNumber' ? 100 : 0,
+        retryAttack: fraudKey === 'retryAttack' ? 100 : 0,
+        cryptoFraud: fraudKey === 'cryptoFraud' ? 100 : 0,
+        nightTime: fraudKey === 'nightTime' ? 100 : 0,
+        highValue: fraudKey === 'highValue' ? 100 : 0,
+        legitimate: 0,
+      },
+    })
+
+    it('should generate high risk scores for card testing (85-99)', () => {
+      const transactions = new MockTransactionGenerator(fraudOnlyConfig('cardTesting')).generate()
+      transactions.forEach(t => {
+        const score = parseInt(t.metadata?.risk_score || '0', 10)
+        expect(score).toBeGreaterThanOrEqual(85)
+        expect(score).toBeLessThan(100)
+      })
+    })
+
+    it('should generate high risk scores for velocity fraud (80-94)', () => {
+      const transactions = new MockTransactionGenerator(fraudOnlyConfig('velocityFraud')).generate()
+      transactions.forEach(t => {
+        const score = parseInt(t.metadata?.risk_score || '0', 10)
+        expect(score).toBeGreaterThanOrEqual(80)
+        expect(score).toBeLessThan(100)
+      })
+    })
+
+    it('should generate high risk scores for crypto fraud (85-94)', () => {
+      const transactions = new MockTransactionGenerator(fraudOnlyConfig('cryptoFraud')).generate()
+      transactions.forEach(t => {
+        const score = parseInt(t.metadata?.risk_score || '0', 10)
+        expect(score).toBeGreaterThanOrEqual(85)
+        expect(score).toBeLessThan(100)
+      })
+    })
+
+    it('should generate moderate risk scores for round numbers (65)', () => {
+      const transactions = new MockTransactionGenerator(fraudOnlyConfig('roundNumber')).generate()
+      transactions.forEach(t => {
+        const score = parseInt(t.metadata?.risk_score || '0', 10)
+        expect(score).toBe(65)
+      })
+    })
+
+    it('should generate low risk scores for legitimate transactions (10-39)', () => {
+      const transactions = new MockTransactionGenerator(createConfig({
+        count: 50,
+        fraudMix: {
+          cardTesting: 0, velocityFraud: 0, highRiskCountry: 0, roundNumber: 0,
+          retryAttack: 0, cryptoFraud: 0, nightTime: 0, highValue: 0, legitimate: 100,
+        },
+      })).generate()
+      transactions.forEach(t => {
+        const score = parseInt(t.metadata?.risk_score || '0', 10)
+        expect(score).toBeGreaterThanOrEqual(10)
+        expect(score).toBeLessThan(40)
+      })
+    })
+  })
+
   describe('edge cases', () => {
     it('should handle count of 1', () => {
       const generator = new MockTransactionGenerator(createConfig({ count: 1 }))

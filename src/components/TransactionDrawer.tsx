@@ -3,6 +3,7 @@
 import { useEffect, useCallback } from 'react'
 import { X, CheckCircle, XCircle, Clock, AlertCircle, ExternalLink, Shield } from 'lucide-react'
 import { TransactionData, FraudPattern } from '@/types'
+import { getRiskLevel, getRiskBadgeConfig, getRiskBarColor } from '@/lib/risk-utils'
 
 interface TransactionDrawerProps {
   transaction: TransactionData | null
@@ -61,13 +62,8 @@ export default function TransactionDrawer({ transaction, fraudPatterns, onClose 
   }
 
   const getRiskBadge = (level: string) => {
-    const map: Record<string, string> = {
-      critical: 'bg-risk-critical-bg border-risk-critical-border text-risk-critical-text',
-      high: 'bg-risk-high-bg border-risk-high-border text-risk-high-text',
-      medium: 'bg-risk-medium-bg border-risk-medium-border text-risk-medium-text',
-      low: 'bg-risk-low-bg border-risk-low-border text-risk-low-text',
-    }
-    return map[level] || 'bg-space-700 border-border text-text-tertiary'
+    const config = getRiskBadgeConfig(level as 'low' | 'medium' | 'high' | 'critical')
+    return config?.className || 'bg-space-700 border-border text-text-tertiary'
   }
 
   const statusConfig = getStatusConfig(transaction.status)
@@ -124,27 +120,21 @@ export default function TransactionDrawer({ transaction, fraudPatterns, onClose 
 
           {/* Risk Score */}
           {transaction.metadata?.risk_score && (() => {
-            const score = parseInt(transaction.metadata.risk_score)
-            const riskLevel = score >= 85 ? 'critical' : score >= 70 ? 'high' : score >= 40 ? 'medium' : 'low'
-            const riskLabel = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)
-            const barColor = {
-              critical: 'bg-[rgb(var(--risk-critical-text))]',
-              high: 'bg-[rgb(var(--risk-high-text))]',
-              medium: 'bg-[rgb(var(--risk-medium-text))]',
-              low: 'bg-[rgb(var(--risk-low-text))]',
-            }[riskLevel]
+            const score = parseInt(transaction.metadata.risk_score, 10)
+            const level = getRiskLevel(score)
+            const badgeConfig = getRiskBadgeConfig(level)
             return (
               <Section title="Risk Score">
                 <div className="space-y-2">
                   <div className="flex items-baseline gap-3">
                     <span className="text-2xl font-mono font-bold text-text-primary">{score}</span>
-                    <span className={`px-2 py-0.5 rounded border text-xs font-medium uppercase tracking-wider ${getRiskBadge(riskLevel)}`}>
-                      {riskLabel}
+                    <span className={`px-2 py-0.5 rounded border text-xs font-medium uppercase tracking-wider ${badgeConfig.className}`}>
+                      {badgeConfig.label}
                     </span>
                   </div>
                   <div className="w-full h-2 bg-space-700 rounded-full overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all ${barColor}`}
+                      className={`h-full rounded-full transition-all ${getRiskBarColor(level)}`}
                       style={{ width: `${Math.min(score, 100)}%` }}
                     />
                   </div>

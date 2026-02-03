@@ -133,6 +133,8 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
                 <button
                   key={proc}
                   disabled={isLastActive}
+                  title={isLastActive ? 'At least one processor must be selected' : ''}
+                  aria-label={`${proc} processor${isActive ? ' (active)' : ''}`}
                   onClick={() => {
                     const next = isActive
                       ? config.processors.filter(p => p !== proc)
