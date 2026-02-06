@@ -10,6 +10,7 @@ interface TransactionContextType {
   transactions: TransactionData[]
   fraudPatterns: FraudPattern[]
   setGeneratedTransactions: (transactions: TransactionData[]) => void
+  setTransactionsWithPatterns: (transactions: TransactionData[], patterns: FraudPattern[]) => void
   clearTransactions: () => void
   hasGeneratedData: boolean
 }
@@ -60,6 +61,11 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     setFraudPatterns(patterns)
   }, [])
 
+  const setTransactionsWithPatterns = useCallback((newTransactions: TransactionData[], patterns: FraudPattern[]) => {
+    setTransactions(newTransactions)
+    setFraudPatterns(patterns)
+  }, [])
+
   const clearTransactions = useCallback(() => {
     setTransactions([])
     setFraudPatterns([])
@@ -75,6 +81,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       transactions,
       fraudPatterns,
       setGeneratedTransactions,
+      setTransactionsWithPatterns,
       clearTransactions,
       hasGeneratedData: transactions.length > 0
     }}>

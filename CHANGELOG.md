@@ -5,6 +5,30 @@ All notable changes to Fraud Explorer will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Transaction Search** - Search input in FilterBar filters transactions by ID, customer name, and description (case-insensitive)
+  - Search query included in active filter count
+  - Clear button on search input
+  - `searchQuery` field added to `ActiveFilters` interface
+- **Clickable Dashboard Charts** - DonutChart and BarChart components support click callbacks for interactive navigation
+  - Status Distribution donut navigates to Query page with `?status=<label>` filter
+  - Processor Breakdown donut navigates to Query page with `?processor=<label>` filter
+  - Cursor pointer and hover opacity effects when click handlers provided
+- **URL Parameter Filters** - Query page reads `status` and `processor` URL search params on mount
+  - Auto-applies filters from URL params, then clears params
+  - Wrapped in `<Suspense>` boundary for Next.js 14 compatibility
+  - Uses ref guard to prevent double-clearing
+- **Query Results in Dashboard** - API query results now populate TransactionContext for Dashboard visibility
+  - Added `setTransactionsWithPatterns(transactions, patterns)` method to TransactionContext
+  - Dashboard can display API query results without requiring generator
+- **Stripe MCP Processor Lock** - When "Use Stripe MCP" toggle is enabled, processor selector auto-selects "stripe" and disables other processors
+- **FilterBar Tests** - 29 new tests covering search filtering, combined filters, null handling, case-insensitive matching (`src/components/FilterBar.test.ts`)
+
+### Changed
+- Total test count increased from 280 to 326 tests (323 passing, 3 skipped timing tests) across 10 test files
+
 ## [1.5.0] - 2026-02-03
 
 ### Added

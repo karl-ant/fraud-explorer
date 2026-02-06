@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Suspense, useState, useEffect, useRef } from 'react'
 import { Shield, AlertTriangle, X, Database } from 'lucide-react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import QueryInterface from '@/components/QueryInterface'
 import DataTable from '@/components/DataTable'
 import FraudPatterns from '@/components/FraudPatterns'
@@ -10,15 +11,45 @@ import TransactionDrawer from '@/components/TransactionDrawer'
 import { useTransactions } from '@/context/TransactionContext'
 import { QueryResponse, TransactionData } from '@/types'
 
+function getInitialFilters(searchParams: URLSearchParams): ActiveFilters {
+  const status = searchParams.get('status')
+  const processor = searchParams.get('processor')
+  if (!status && !processor) return EMPTY_FILTERS
+  return {
+    ...EMPTY_FILTERS,
+    statuses: status ? [status] : [],
+    processors: processor ? [processor] : [],
+  }
+}
+
 export default function Home() {
-  const { transactions: contextTransactions, fraudPatterns: contextFraudPatterns, hasGeneratedData } = useTransactions()
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
+  )
+}
+
+function HomeContent() {
+  const { transactions: contextTransactions, fraudPatterns: contextFraudPatterns, hasGeneratedData, setTransactionsWithPatterns } = useTransactions()
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const paramsClearedRef = useRef(false)
 
   const [response, setResponse] = useState<QueryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [filteredTransactionIds, setFilteredTransactionIds] = useState<string[] | null>(null)
   const [showingGeneratedData, setShowingGeneratedData] = useState(false)
-  const [activeFilters, setActiveFilters] = useState<ActiveFilters>(EMPTY_FILTERS)
+  const [activeFilters, setActiveFilters] = useState<ActiveFilters>(() => getInitialFilters(searchParams))
   const [selectedTransaction, setSelectedTransaction] = useState<TransactionData | null>(null)
+
+  // Clear URL params after applying them as filters
+  useEffect(() => {
+    if (!paramsClearedRef.current && (searchParams.get('status') || searchParams.get('processor'))) {
+      paramsClearedRef.current = true
+      router.replace('/')
+    }
+  }, [searchParams, router])
 
   // Auto-display generated data when available and no API query has been made
   useEffect(() => {
@@ -45,6 +76,9 @@ export default function Home() {
       })
       const data = await res.json()
       setResponse(data)
+      if (data.data?.length > 0) {
+        setTransactionsWithPatterns(data.data, data.fraud_patterns || [])
+      }
     } catch (error) {
       setResponse({
         data: [],

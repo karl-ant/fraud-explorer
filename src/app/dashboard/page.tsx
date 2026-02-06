@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useCallback } from 'react'
 import { BarChart3, DollarSign, Activity, ShieldAlert, Wand2 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useTransactions } from '@/context/TransactionContext'
 import { useTheme } from '@/context/ThemeContext'
 import StatCard from '@/components/charts/StatCard'
@@ -49,6 +50,15 @@ function useChartColors() {
 export default function DashboardPage() {
   const { transactions, fraudPatterns, hasGeneratedData } = useTransactions()
   const colors = useChartColors()
+  const router = useRouter()
+
+  const handleStatusClick = useCallback((label: string) => {
+    router.push(`/?status=${encodeURIComponent(label)}`)
+  }, [router])
+
+  const handleProcessorClick = useCallback((label: string) => {
+    router.push(`/?processor=${encodeURIComponent(label)}`)
+  }, [router])
 
   const stats = useMemo(() => computeOverviewStats(transactions, fraudPatterns), [transactions, fraudPatterns])
   const statusDist = useMemo(() => computeStatusDistribution(transactions), [transactions])
@@ -93,6 +103,7 @@ export default function DashboardPage() {
             value: s.count,
             color: colors.status[s.status] || colors.processor.unknown,
           }))}
+          onSegmentClick={handleStatusClick}
         />
         <DonutChart
           title="Processor Breakdown"
@@ -101,6 +112,7 @@ export default function DashboardPage() {
             value: p.count,
             color: colors.processor[p.processor] || colors.processor.unknown,
           }))}
+          onSegmentClick={handleProcessorClick}
         />
       </div>
 

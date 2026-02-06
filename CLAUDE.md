@@ -1,13 +1,22 @@
 # Fraud Explorer
 
-> **Version**: 1.5.0 | **Last Updated**: 2026-02-03
+> **Version**: 1.6.0 | **Last Updated**: 2026-02-06
 
 ## Critical Instructions
 - Do not use the public npm registry, only the internal registry
 - Do not use esbuild (blocked by Anthropic policy) - use Jest for testing
 - Always run the app on port 3006
 
-## Recent Changes (v1.5.0)
+## Recent Changes (v1.6.0)
+- **Transaction Search**: FilterBar includes search input filtering by transaction ID, customer name, and description (case-insensitive)
+- **Clickable Dashboard Charts**: DonutChart and BarChart support click callbacks. Dashboard Status Distribution and Processor Breakdown navigate to Query page with URL filters.
+- **URL Parameter Filters**: Query page reads `status` and `processor` URL params on mount, auto-applies filters, then clears params. Wrapped in `<Suspense>` for Next.js 14.
+- **Query Results in Dashboard**: API query results pushed to TransactionContext via new `setTransactionsWithPatterns()` method. Dashboard can display query results without generator.
+- **Stripe MCP Processor Lock**: Enabling "Use Stripe MCP" toggle auto-selects "stripe" processor and disables other processor buttons
+- **FilterBar Tests**: 29 new tests covering search filtering, combined filters, null handling, case-insensitive matching
+- **Test Count**: 326 total tests (323 passing, 3 skipped timing tests) across 10 test files
+
+### Previous (v1.5.0)
 - **Risk Score UI**: Color-coded risk score column in DataTable (sortable, 4 levels: LOW/MED/HIGH/CRIT) with theme-aware styling
 - **Risk Score in Drawer**: TransactionDrawer shows risk score with visual progress bar and level badge
 - **Multi-Processor Generator**: Generator supports multiple processor selection (checkboxes, 1-3 processors). Transactions split evenly across selected processors.
@@ -129,9 +138,12 @@ TransactionProvider (layout.tsx)
 
 ### Transaction Context (`src/context/TransactionContext.tsx`)
 - **State**: `transactions`, `fraudPatterns`, `hasGeneratedData`
-- **Methods**: `setGeneratedTransactions()`, `clearTransactions()`
+- **Methods**:
+  - `setGeneratedTransactions()` - Sets transactions and auto-computes fraud patterns
+  - `setTransactionsWithPatterns(transactions, patterns)` - Sets both without re-running fraud analysis (for API query results)
+  - `clearTransactions()`
 - **Persistence**: sessionStorage (survives refresh, clears on tab close)
-- **Auto-analysis**: Fraud patterns computed automatically when transactions set
+- **Auto-analysis**: Fraud patterns computed automatically when transactions set via `setGeneratedTransactions()`
 
 ### Data Flow
 1. User navigates to `/generator`
@@ -235,10 +247,11 @@ Collapsible sections use CSS grid-based animations:
 
 ### Key UI Components
 - **Navigation**: Header with "Query", "Dashboard", and "Generator" tabs; transaction count badge; theme dropdown selector
-- **QueryInterface**: Example queries collapsed by default, toggle via accordion header
+- **QueryInterface**: Example queries collapsed by default, toggle via accordion header. Stripe MCP toggle auto-locks processor selector to "stripe".
 - **FraudPatterns**: Pattern cards show compact headers (icon, name, badge, count), expand to show full details
 - **MockTransactionGenerator**: Full-page form with multi-processor selection, live validation, 3-col fraud mix, 4-col status distribution
-- **Dashboard**: SVG charts (DonutChart, BarChart, StatCard) with theme-aware colors
+- **Dashboard**: SVG charts (DonutChart, BarChart, StatCard) with theme-aware colors. **Clickable charts** navigate to Query page with URL filters (Status Distribution and Processor Breakdown donuts).
+- **FilterBar**: Status, processor, amount range filters, and **search input** (filters by ID, customer name, description). Search query included in active filter count.
 - **DataTable**: Sortable columns including **risk score column** with color-coded levels (LOW=green, MED=yellow, HIGH=orange, CRIT=red)
 - **TransactionDrawer**: Slide-in panel with full transaction details, **risk score section** with progress bar, and fraud analysis
 
@@ -264,6 +277,9 @@ npm run test:coverage # Generate coverage report
 | `adyen-mock.test.ts` | 73 | Adyen client filtering and fraud patterns |
 | `paypal-mock.test.ts` | 64 | PayPal client filtering and fraud patterns |
 | `analytics.test.ts` | 15 | Analytics utility functions |
+| `FilterBar.test.ts` | 29 | Search filtering, combined filters, null handling, case-insensitive matching |
+| `stripe-mcp.test.ts` | 7 | Stripe MCP client tests |
+| `risk-utils.test.ts` | 6 | Risk score parsing and level calculations |
 
 ### Coverage
 - **Statements**: 73%+
