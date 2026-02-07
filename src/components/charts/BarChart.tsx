@@ -10,9 +10,10 @@ interface BarChartProps {
   bars: Bar[]
   title: string
   formatValue?: (v: number) => string
+  onBarClick?: (label: string) => void
 }
 
-export default function BarChart({ bars, title, formatValue = String }: BarChartProps) {
+export default function BarChart({ bars, title, formatValue = String, onBarClick }: BarChartProps) {
   if (bars.length === 0) return null
 
   const max = Math.max(...bars.map(b => b.value), 1)
@@ -60,7 +61,8 @@ export default function BarChart({ bars, title, formatValue = String }: BarChart
                   height={barHeight}
                   fill={bar.color}
                   rx={2}
-                  className="transition-all duration-300"
+                  className={`transition-all duration-300 ${onBarClick ? 'cursor-pointer hover:opacity-75' : ''}`}
+                  onClick={onBarClick ? () => onBarClick(bar.label) : undefined}
                 />
                 {/* Label */}
                 <text

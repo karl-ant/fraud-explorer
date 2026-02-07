@@ -1,6 +1,6 @@
 'use client'
 
-import { X } from 'lucide-react'
+import { X, Search } from 'lucide-react'
 import { TransactionData } from '@/types'
 
 export interface ActiveFilters {
@@ -8,6 +8,7 @@ export interface ActiveFilters {
   processors: string[]
   amountMin: string
   amountMax: string
+  searchQuery: string
 }
 
 export const EMPTY_FILTERS: ActiveFilters = {
@@ -15,6 +16,7 @@ export const EMPTY_FILTERS: ActiveFilters = {
   processors: [],
   amountMin: '',
   amountMax: '',
+  searchQuery: '',
 }
 
 interface FilterBarProps {
@@ -46,6 +48,15 @@ export function applyClientFilters(data: TransactionData[], filters: ActiveFilte
     if (!isNaN(max)) result = result.filter(t => t.amount <= max)
   }
 
+  if (filters.searchQuery) {
+    const q = filters.searchQuery.toLowerCase()
+    result = result.filter(t =>
+      t.id.toLowerCase().includes(q) ||
+      (t.customer && t.customer.toLowerCase().includes(q)) ||
+      (t.description && t.description.toLowerCase().includes(q))
+    )
+  }
+
   return result
 }
 
@@ -54,7 +65,8 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
     filters.statuses.length +
     filters.processors.length +
     (filters.amountMin ? 1 : 0) +
-    (filters.amountMax ? 1 : 0)
+    (filters.amountMax ? 1 : 0) +
+    (filters.searchQuery ? 1 : 0)
 
   const toggleStatus = (status: string) => {
     const statuses = filters.statuses.includes(status)
@@ -85,6 +97,30 @@ export default function FilterBar({ filters, onChange }: FilterBarProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-3 p-3 bg-space-800 border border-border rounded-lg">
+      {/* Search Input */}
+      <div className="flex items-center gap-1.5">
+        <div className="relative flex items-center">
+          <Search className="absolute left-2 h-3.5 w-3.5 text-text-tertiary pointer-events-none" />
+          <input
+            type="text"
+            placeholder="Search ID, customer, description…"
+            value={filters.searchQuery}
+            onChange={(e) => onChange({ ...filters, searchQuery: e.target.value })}
+            className="w-56 pl-7 pr-7 py-1 bg-space-700 border border-border rounded text-xs font-mono text-text-primary placeholder-text-tertiary focus:border-terminal-400 focus:outline-none"
+          />
+          {filters.searchQuery && (
+            <button
+              onClick={() => onChange({ ...filters, searchQuery: '' })}
+              className="absolute right-1.5 text-text-tertiary hover:text-text-secondary transition-colors"
+            >
+              <X className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="w-px h-6 bg-border" />
+
       {/* Status Toggles */}
       <div className="flex items-center gap-1.5">
         <span className="text-xs text-text-tertiary font-mono uppercase tracking-wider mr-1">Status</span>

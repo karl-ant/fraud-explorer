@@ -74,7 +74,7 @@ export default function QueryInterface({ onQuery, loading }: QueryInterfaceProps
                 key={value}
                 type="button"
                 onClick={() => setProcessor(value)}
-                disabled={loading}
+                disabled={loading || (useRealStripe && value !== 'stripe')}
                 className={`px-4 py-2.5 text-sm font-medium rounded-md transition-all duration-200
                           ${processor === value
                             ? 'bg-terminal-500 text-white shadow-glow'
@@ -96,7 +96,10 @@ export default function QueryInterface({ onQuery, loading }: QueryInterfaceProps
               <input
                 type="checkbox"
                 checked={useRealStripe}
-                onChange={(e) => setUseRealStripe(e.target.checked)}
+                onChange={(e) => {
+                  setUseRealStripe(e.target.checked)
+                  if (e.target.checked) setProcessor('stripe')
+                }}
                 className="sr-only peer"
                 disabled={loading}
               />

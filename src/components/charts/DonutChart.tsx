@@ -9,9 +9,10 @@ interface Segment {
 interface DonutChartProps {
   segments: Segment[]
   title: string
+  onSegmentClick?: (label: string) => void
 }
 
-export default function DonutChart({ segments, title }: DonutChartProps) {
+export default function DonutChart({ segments, title, onSegmentClick }: DonutChartProps) {
   const total = segments.reduce((sum, s) => sum + s.value, 0)
   if (total === 0) return null
 
@@ -47,7 +48,8 @@ export default function DonutChart({ segments, title }: DonutChartProps) {
               strokeDasharray={`${arc.dashLen} ${circumference - arc.dashLen}`}
               strokeDashoffset={arc.dashOffset}
               transform={`rotate(-90 ${center} ${center})`}
-              className="transition-all duration-300"
+              className={`transition-all duration-300 ${onSegmentClick ? 'cursor-pointer hover:opacity-75' : ''}`}
+              onClick={onSegmentClick ? () => onSegmentClick(arc.label) : undefined}
             />
           ))}
           <text x={center} y={center - 6} textAnchor="middle" className="fill-text-primary text-lg font-mono font-bold">{total}</text>
@@ -55,7 +57,11 @@ export default function DonutChart({ segments, title }: DonutChartProps) {
         </svg>
         <div className="space-y-1.5 min-w-0">
           {arcs.map((arc, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div
+              key={i}
+              className={`flex items-center gap-2 ${onSegmentClick ? 'cursor-pointer hover:opacity-75 transition-opacity' : ''}`}
+              onClick={onSegmentClick ? () => onSegmentClick(arc.label) : undefined}
+            >
               <div className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: arc.color }} />
               <span className="text-xs text-text-secondary truncate capitalize">{arc.label}</span>
               <span className="text-xs font-mono text-text-primary ml-auto">{arc.value}</span>
