@@ -9,6 +9,7 @@ import FraudPatterns from '@/components/FraudPatterns'
 import FilterBar, { ActiveFilters, EMPTY_FILTERS, applyClientFilters } from '@/components/FilterBar'
 import TransactionDrawer from '@/components/TransactionDrawer'
 import { useTransactions } from '@/context/TransactionContext'
+import { buildNarrativeSummary } from '@/lib/narrative'
 import { QueryResponse, TransactionData } from '@/types'
 
 function getInitialFilters(searchParams: URLSearchParams): ActiveFilters {
@@ -57,7 +58,7 @@ function HomeContent() {
     if (hasGeneratedData && !response && !loading && !showingGeneratedData) {
       setResponse({
         data: contextTransactions,
-        summary: `Displaying ${contextTransactions.length.toLocaleString()} generated mock transactions with ${contextFraudPatterns.length} fraud patterns detected`,
+        summary: buildNarrativeSummary(contextTransactions, contextFraudPatterns),
         fraud_patterns: contextFraudPatterns
       })
       setShowingGeneratedData(true)
@@ -93,7 +94,7 @@ function HomeContent() {
     if (hasGeneratedData) {
       setResponse({
         data: contextTransactions,
-        summary: `Displaying ${contextTransactions.length.toLocaleString()} generated mock transactions with ${contextFraudPatterns.length} fraud patterns detected`,
+        summary: buildNarrativeSummary(contextTransactions, contextFraudPatterns),
         fraud_patterns: contextFraudPatterns
       })
       setShowingGeneratedData(true)

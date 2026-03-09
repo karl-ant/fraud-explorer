@@ -1,13 +1,21 @@
 # Fraud Explorer
 
-> **Version**: 1.6.0 | **Last Updated**: 2026-02-06
+> **Version**: 1.7.0 | **Last Updated**: 2026-03-09
 
 ## Critical Instructions
 - Do not use the public npm registry, only the internal registry
 - Do not use esbuild (blocked by Anthropic policy) - use Jest for testing
 - Always run the app on port 3006
 
-## Recent Changes (v1.6.0)
+## Recent Changes (v1.7.0)
+- **Scenario Presets**: 5 one-click demo presets in the generator (Card Testing Attack, Money Movement, Velocity Burst, Quiet Week, Kitchen Sink). Defined in `src/lib/generator-presets.ts` (`SCENARIO_PRESETS` export + `applyPreset()` helper). Horizontal chip row at top of generator; any manual slider edit reverts to "Custom".
+- **Narrative Summary**: `src/lib/narrative.ts` exports `buildNarrativeSummary()` producing analyst-style briefings leading with highest-severity pattern and dollar exposure (e.g., "CRITICAL: Card cracking succeeded — 5 failed probes then a $2,400 breakthrough. $47,200 at risk across 4 patterns."). Also exports `computePatternExposure()`. Replaces `generateSummary` in `route.ts` and hardcoded summary strings in `page.tsx`.
+- **"At Risk" Dashboard Card**: New `computeFraudExposure()` in `src/lib/analytics.ts` returning `{atRiskAmount, atRiskCount, confirmedLossAmount}`. Dashboard "Fraud Rate" stat card replaced with "At Risk: $X" showing dollar exposure.
+- **Realism Layer**: `mock-generator.ts` now has `CUSTOMER_NAMES` (20 names) and `PRODUCT_DESCRIPTIONS` lookup tables (legitimate/digital/crypto/highValue/cardTesting categories). All generated transactions get `metadata.customer_name` and realistic product descriptions. TransactionDrawer shows customer name below customer ID.
+- **Test Count**: 367 total tests (364 passing, 3 skipped timing tests) across 11 test files
+- **New test file**: `narrative.test.ts` (20 tests); +17 tests in `mock-generator.test.ts` (preset and customer_name coverage); +4 tests in `analytics.test.ts` (fraud exposure)
+
+### Previous (v1.6.0)
 - **Transaction Search**: FilterBar includes search input filtering by transaction ID, customer name, and description (case-insensitive)
 - **Clickable Dashboard Charts**: DonutChart and BarChart support click callbacks. Dashboard Status Distribution and Processor Breakdown navigate to Query page with URL filters.
 - **URL Parameter Filters**: Query page reads `status` and `processor` URL params on mount, auto-applies filters, then clears params. Wrapped in `<Suspense>` for Next.js 14.
@@ -78,6 +86,8 @@ npm run test:coverage # Run tests with coverage report
   - **PayPal mock client**: `src/lib/paypal-mock.ts`
   - **Adyen mock client**: `src/lib/adyen-mock.ts`
 - **Mock transaction generator**: `src/lib/mock-generator.ts`
+- **Generator presets**: `src/lib/generator-presets.ts`
+- **Narrative summary**: `src/lib/narrative.ts`
 - **Types**: `src/types/index.ts`
 - **Claude integration**: `src/lib/claude.ts`
 - **Transaction context**: `src/context/TransactionContext.tsx`
@@ -158,6 +168,7 @@ TransactionProvider (layout.tsx)
 Located at `/generator` route. Uses `src/lib/mock-generator.ts` and `src/components/MockTransactionGenerator.tsx`.
 
 ### Features
+- **Scenario presets**: 5 one-click demo presets (Card Testing Attack, Money Movement, Velocity Burst, Quiet Week, Kitchen Sink) via chip row at top of generator; manual edits revert active preset to "Custom"
 - Configurable transaction count (1-10,000)
 - **Multi-processor selection** (Stripe, PayPal, Adyen) - select 1-3 processors via toggle buttons
 - Transactions **split evenly** across selected processors (e.g., 100 txns across 2 processors = 50 each)
@@ -165,6 +176,7 @@ Located at `/generator` route. Uses `src/lib/mock-generator.ts` and `src/compone
 - Fraud pattern mix (8 patterns + legitimate) - 3-column layout
 - Status distribution (succeeded, failed, pending, canceled) - 4-column layout
 - Live validation indicators showing totals
+- **Realistic customer data**: `CUSTOMER_NAMES` (20 names) and `PRODUCT_DESCRIPTIONS` lookup tables embedded in generator; all transactions include `metadata.customer_name` and category-appropriate description
 - SessionStorage persistence across page refreshes
 
 ### Validation
@@ -249,8 +261,8 @@ Collapsible sections use CSS grid-based animations:
 - **Navigation**: Header with "Query", "Dashboard", and "Generator" tabs; transaction count badge; theme dropdown selector
 - **QueryInterface**: Example queries collapsed by default, toggle via accordion header. Stripe MCP toggle auto-locks processor selector to "stripe".
 - **FraudPatterns**: Pattern cards show compact headers (icon, name, badge, count), expand to show full details
-- **MockTransactionGenerator**: Full-page form with multi-processor selection, live validation, 3-col fraud mix, 4-col status distribution
-- **Dashboard**: SVG charts (DonutChart, BarChart, StatCard) with theme-aware colors. **Clickable charts** navigate to Query page with URL filters (Status Distribution and Processor Breakdown donuts).
+- **MockTransactionGenerator**: Full-page form with scenario preset chips, multi-processor selection, live validation, 3-col fraud mix, 4-col status distribution
+- **Dashboard**: SVG charts (DonutChart, BarChart, StatCard) with theme-aware colors. **Clickable charts** navigate to Query page with URL filters (Status Distribution and Processor Breakdown donuts). "Fraud Rate" stat card replaced by **"At Risk: $X"** showing dollar exposure from `computeFraudExposure()`.
 - **FilterBar**: Status, processor, amount range filters, and **search input** (filters by ID, customer name, description). Search query included in active filter count.
 - **DataTable**: Sortable columns including **risk score column** with color-coded levels (LOW=green, MED=yellow, HIGH=orange, CRIT=red)
 - **TransactionDrawer**: Slide-in panel with full transaction details, **risk score section** with progress bar, and fraud analysis
@@ -272,14 +284,15 @@ npm run test:coverage # Generate coverage report
 |------|-------|-------------|
 | `error-handler.test.ts` | 17 | AppError class and handleApiError function |
 | `fraud-detector.test.ts` | 36 | 8 fraud detection algorithms |
-| `mock-generator.test.ts` | 47 | Generator validation, transaction generation, multi-processor tests |
+| `mock-generator.test.ts` | 64 | Generator validation, transaction generation, multi-processor tests, preset application, customer_name generation |
 | `claude.test.ts` | 32 | Query processing, markdown stripping, error handling |
 | `adyen-mock.test.ts` | 73 | Adyen client filtering and fraud patterns |
 | `paypal-mock.test.ts` | 64 | PayPal client filtering and fraud patterns |
-| `analytics.test.ts` | 15 | Analytics utility functions |
+| `analytics.test.ts` | 19 | Analytics utility functions including fraud exposure |
 | `FilterBar.test.ts` | 29 | Search filtering, combined filters, null handling, case-insensitive matching |
 | `stripe-mcp.test.ts` | 7 | Stripe MCP client tests |
 | `risk-utils.test.ts` | 6 | Risk score parsing and level calculations |
+| `narrative.test.ts` | 20 | Narrative summary generation, pattern exposure computation |
 
 ### Coverage
 - **Statements**: 73%+

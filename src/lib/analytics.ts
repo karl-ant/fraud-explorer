@@ -94,3 +94,28 @@ export function computeOverviewStats(txns: TransactionData[], patterns: FraudPat
 
   return { total, volume, avgAmount, fraudRate }
 }
+
+export interface FraudExposure {
+  atRiskAmount: number
+  atRiskCount: number
+  confirmedLossAmount: number
+}
+
+export function computeFraudExposure(
+  txns: TransactionData[],
+  patterns: FraudPattern[]
+): FraudExposure {
+  const affectedIds = new Set(patterns.flatMap(p => p.affected_transactions))
+  const affected = txns.filter(t => affectedIds.has(t.id))
+
+  const atRiskAmount = affected.reduce((sum, t) => sum + t.amount, 0)
+  const confirmedLossAmount = affected
+    .filter(t => t.status === 'succeeded')
+    .reduce((sum, t) => sum + t.amount, 0)
+
+  return {
+    atRiskAmount,
+    atRiskCount: affected.length,
+    confirmedLossAmount,
+  }
+}

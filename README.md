@@ -14,12 +14,13 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
 - **Natural Language Queries**: Ask questions about transaction data in plain English powered by Claude 3.5 Sonnet
 - **Advanced Fraud Detection**: 8 sophisticated fraud pattern detection algorithms analyzing transactions in real-time
 - **Multi-Processor Support**: Unified view across Stripe, PayPal, and Adyen (with mock data for demo)
-- **Mock Transaction Generator**: Create custom test datasets with configurable fraud patterns, status distributions, and **multi-processor selection** (split transactions evenly across 1-3 processors)
+- **Mock Transaction Generator**: Create custom test datasets with **5 scenario presets** (Card Testing Attack, Money Movement, Velocity Burst, Quiet Week, Kitchen Sink), configurable fraud patterns, status distributions, and **multi-processor selection** (split transactions evenly across 1-3 processors)
 - **Interactive Visualizations**: Sortable transaction tables with **color-coded risk score column** (LOW/MED/HIGH/CRIT) and collapsible fraud pattern cards
 - **Transaction Search**: Filter transactions by ID, customer name, or description with real-time search
 - **Clickable Charts**: Dashboard charts navigate to Query page with filters applied (click Status Distribution or Processor Breakdown)
 - **3 Gorgeous Themes**: Mission Control (dark slate blue), Neobank (charcoal with emerald), Arctic Intel (light indigo)
-- **Dashboard Analytics**: SVG-based charts showing transaction trends, processor distribution, and risk analysis
+- **Dashboard Analytics**: SVG-based charts showing transaction trends, processor distribution, and risk analysis including an **"At Risk: $X"** fraud exposure card
+- **Analyst Narrative Summaries**: Plain-English briefings after every query, leading with the highest-severity pattern and total dollar exposure
 - **Transaction Details**: Slide-in drawer with full metadata, **visual risk score meter**, and fraud cross-referencing
 - **100+ Mock Transactions**: Diverse dataset with realistic fraud patterns across all 3 processors
 
@@ -66,7 +67,7 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
 
 4. **Run tests** (optional):
    ```bash
-   npm test              # Run all 326 tests
+   npm test              # Run all 367 tests
    npm run test:coverage # View coverage report (73%+)
    ```
 
@@ -77,14 +78,15 @@ All data is mocked, but you have the ability to test using the Stripe MCP connec
 ### Mock Transaction Generator
 Generate custom test data to explore fraud detection:
 1. Click the **Generator** tab in the navigation header
-2. Adjust transaction count (1-10,000) and date range
-3. **Select processors** (Stripe, PayPal, Adyen) - choose 1-3 via toggle buttons. Transactions split evenly across selections.
-4. Set fraud pattern percentages using the sliders (must sum to 100%)
-5. Set status distribution (must sum to 100%)
-6. Click "Generate Transactions"
-7. Click "View in Query" to analyze the generated data
-8. Use the **search bar** to filter by transaction ID, customer name, or description
-9. Data persists across page refreshes (stored in sessionStorage)
+2. Choose a **scenario preset** (e.g., "Card Testing Attack") or configure manually
+3. Adjust transaction count (1-10,000) and date range
+4. **Select processors** (Stripe, PayPal, Adyen) - choose 1-3 via toggle buttons. Transactions split evenly across selections.
+5. Set fraud pattern percentages using the sliders (must sum to 100%)
+6. Set status distribution (must sum to 100%)
+7. Click "Generate Transactions"
+8. Click "View in Query" to analyze the generated data
+9. Use the **search bar** to filter by transaction ID, customer name, or description
+10. Data persists across page refreshes (stored in sessionStorage)
 
 ### Fraud Detection Queries
 Try these natural language queries to see fraud detection in action:
@@ -115,7 +117,7 @@ Try these natural language queries to see fraud detection in action:
 - **AI/ML**: Claude 3.5 Sonnet (Haiku 4.5) via Anthropic SDK with structured JSON responses
 - **Data Sources**: Stripe MCP + PayPal Mock + Adyen Mock clients
 - **Fraud Detection**: Custom pattern analysis algorithms with risk scoring (LOW/MED/HIGH/CRIT levels)
-- **Testing**: Jest + ts-jest with 73%+ code coverage (326 tests across 10 test files)
+- **Testing**: Jest + ts-jest with 73%+ code coverage (367 tests across 11 test files)
 - **UI Components**: Lucide React for icons, custom SVG charts
 - **Theming**: 3 themes with CSS custom properties and localStorage persistence
 - **Test Data**: Configurable mock transaction generator with multi-processor support
@@ -168,10 +170,12 @@ Try these natural language queries to see fraud detection in action:
 
 9. **Mock Transaction Generator** (`src/components/MockTransactionGenerator.tsx`)
    - Dedicated `/generator` page with full-width layout
+   - **5 scenario presets** (`src/lib/generator-presets.ts`) via chip row; manual edits revert to "Custom"
    - **Multi-processor selection** with toggle buttons (select 1-3 processors, transactions split evenly)
    - Configurable fraud pattern mixing (8 patterns + legitimate) - 3-column layout
    - Adjustable status distribution (4-column layout)
    - Live validation with real-time total indicators
+   - Realistic `metadata.customer_name` and product descriptions on all generated transactions
    - SessionStorage persistence for data across refreshes
 
 10. **Payment Processor Clients**
@@ -238,14 +242,15 @@ npm run test:watch    # Watch mode for development
 npm run test:coverage # Generate HTML coverage report
 ```
 
-**Test Coverage**: 326 tests (323 passing, 3 skipped) across 10 test files covering:
+**Test Coverage**: 367 tests (364 passing, 3 skipped) across 11 test files covering:
 - Error handling utilities
 - Fraud detection algorithms (8 patterns)
-- Mock transaction generator with multi-processor tests
+- Mock transaction generator with multi-processor, preset, and customer_name tests
 - Claude query processing
 - PayPal and Adyen mock clients
-- Analytics utility functions
+- Analytics utility functions including fraud exposure calculation
 - FilterBar search and filtering logic
+- Narrative summary generation and pattern exposure computation
 
 ## Troubleshooting
 

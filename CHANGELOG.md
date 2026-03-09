@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-03-09
+
+### Added
+- **Scenario Presets** - 5 one-click demo presets for the mock transaction generator (`src/lib/generator-presets.ts`)
+  - Presets: Card Testing Attack, Money Movement, Velocity Burst, Quiet Week, Kitchen Sink
+  - Horizontal chip row at top of generator UI; selecting a preset snaps all sliders instantly
+  - `SCENARIO_PRESETS` array and `applyPreset()` helper exported for external use
+  - Manual edits to any slider after preset selection reverts label to "Custom"
+- **Narrative Summary** - Analyst-style briefings for fraud query results (`src/lib/narrative.ts`)
+  - `buildNarrativeSummary()` leads with highest-severity pattern and total dollar exposure
+  - `computePatternExposure()` helper calculates at-risk amount per fraud pattern
+  - Replaces `generateSummary` in `route.ts` and hardcoded summary strings in `page.tsx`
+- **"At Risk" Dashboard Stat Card** - Dollar-value fraud exposure on Dashboard
+  - `computeFraudExposure()` added to `src/lib/analytics.ts`, returns `{atRiskAmount, atRiskCount, confirmedLossAmount}`
+  - Dashboard "Fraud Rate" stat card replaced with "At Risk: $X" showing dollar exposure
+- **Realism Layer for Generated Transactions** - More lifelike mock data from generator
+  - `CUSTOMER_NAMES` table (20 names) and `PRODUCT_DESCRIPTIONS` lookup by category (legitimate, digital, crypto, highValue, cardTesting) in `src/lib/mock-generator.ts`
+  - All generated transactions include `metadata.customer_name` and a category-appropriate product description
+  - TransactionDrawer displays customer name below customer ID
+- **Narrative Tests** - 20 new tests in `narrative.test.ts` covering summary generation and pattern exposure
+
+### Changed
+- Total test count increased from 326 to 367 tests (364 passing, 3 skipped timing tests) across 11 test files
+- `mock-generator.test.ts`: +17 tests covering preset application and customer_name generation (64 total)
+- `analytics.test.ts`: +4 tests for `computeFraudExposure` (19 total)
+
+## [1.6.0] - 2026-02-06
+
 ### Added
 - **Transaction Search** - Search input in FilterBar filters transactions by ID, customer name, and description (case-insensitive)
   - Search query included in active filter count

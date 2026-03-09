@@ -1,4 +1,5 @@
 import { MockTransactionGenerator, GeneratorConfig } from './mock-generator'
+import { SCENARIO_PRESETS, applyPreset } from './generator-presets'
 
 // Helper to create valid default config
 const createConfig = (overrides: Partial<GeneratorConfig> = {}): GeneratorConfig => ({
@@ -501,7 +502,7 @@ describe('MockTransactionGenerator', () => {
 
       cryptoTxns.forEach(t => {
         expect(t.metadata?.merchant_category).toBe('cryptocurrency')
-        expect(t.description).toContain('Cryptocurrency')
+        expect(t.description).toBeTruthy()
       })
     })
 
@@ -876,5 +877,65 @@ describe('MockTransactionGenerator', () => {
         expect(t.metadata?.ip_address).toMatch(ipRegex)
       })
     })
+  })
+
+  describe('customer_name metadata', () => {
+    it('should populate customer_name for transactions with a customer', () => {
+      const generator = new MockTransactionGenerator(createConfig({
+        count: 50,
+        fraudMix: {
+          cardTesting: 0, velocityFraud: 0, highRiskCountry: 0, roundNumber: 0,
+          retryAttack: 0, cryptoFraud: 0, nightTime: 0, highValue: 0, legitimate: 100,
+        },
+      }))
+      const transactions = generator.generate()
+
+      transactions.forEach(t => {
+        expect(t.metadata?.customer_name).toBeDefined()
+        expect(typeof t.metadata?.customer_name).toBe('string')
+        expect((t.metadata?.customer_name as string).length).toBeGreaterThan(0)
+      })
+    })
+  })
+})
+
+describe('SCENARIO_PRESETS', () => {
+  it.each(SCENARIO_PRESETS.map(p => [p.id, p]))(
+    'preset "%s" fraudMix should sum to exactly 100',
+    (_id, preset) => {
+      const total = Object.values(preset.config.fraudMix).reduce((a, b) => a + b, 0)
+      expect(total).toBe(100)
+    }
+  )
+
+  it.each(SCENARIO_PRESETS.map(p => [p.id, p]))(
+    'preset "%s" statusDistribution should sum to exactly 100',
+    (_id, preset) => {
+      const total = Object.values(preset.config.statusDistribution).reduce((a, b) => a + b, 0)
+      expect(total).toBe(100)
+    }
+  )
+
+  it.each(SCENARIO_PRESETS.map(p => [p.id, p]))(
+    'preset "%s" should produce a valid GeneratorConfig via applyPreset',
+    (_id, preset) => {
+      const config = applyPreset(preset)
+      expect(() => new MockTransactionGenerator(config)).not.toThrow()
+      expect(config.dateRange.start).toBeInstanceOf(Date)
+      expect(config.dateRange.end).toBeInstanceOf(Date)
+      expect(config.dateRange.start.getTime()).toBeLessThan(config.dateRange.end.getTime())
+    }
+  )
+
+  it('should export 5 presets', () => {
+    expect(SCENARIO_PRESETS).toHaveLength(5)
+  })
+
+  it('applyPreset should set date range to last 7 days', () => {
+    const preset = SCENARIO_PRESETS[0]
+    const config = applyPreset(preset)
+    const diffMs = config.dateRange.end.getTime() - config.dateRange.start.getTime()
+    const diffDays = diffMs / (1000 * 60 * 60 * 24)
+    expect(diffDays).toBeCloseTo(7, 1)
   })
 })

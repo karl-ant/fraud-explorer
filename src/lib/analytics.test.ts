@@ -5,6 +5,7 @@ import {
   computeVolumeByDay,
   computeFraudSummary,
   computeOverviewStats,
+  computeFraudExposure,
 } from './analytics'
 
 function makeTxn(overrides: Partial<TransactionData> = {}): TransactionData {
@@ -186,5 +187,55 @@ describe('computeOverviewStats', () => {
     const txns = [makeTxn()]
     const result = computeOverviewStats(txns)
     expect(result.fraudRate).toBe(0)
+  })
+})
+
+describe('computeFraudExposure', () => {
+  it('should return zeros for empty input', () => {
+    const result = computeFraudExposure([], [])
+    expect(result).toEqual({ atRiskAmount: 0, atRiskCount: 0, confirmedLossAmount: 0 })
+  })
+
+  it('should sum at-risk amounts from a single pattern', () => {
+    const txns = [
+      makeTxn({ id: 't1', amount: 1000, status: 'succeeded' }),
+      makeTxn({ id: 't2', amount: 2000, status: 'failed' }),
+      makeTxn({ id: 't3', amount: 5000, status: 'succeeded' }),
+    ]
+    const patterns = [makePattern({ affected_transactions: ['t1', 't2'] })]
+    const result = computeFraudExposure(txns, patterns)
+    expect(result.atRiskAmount).toBe(3000)
+    expect(result.atRiskCount).toBe(2)
+    expect(result.confirmedLossAmount).toBe(1000) // only t1 succeeded
+  })
+
+  it('should dedup affected IDs across overlapping patterns', () => {
+    const txns = [
+      makeTxn({ id: 't1', amount: 1000, status: 'succeeded' }),
+      makeTxn({ id: 't2', amount: 2000, status: 'succeeded' }),
+      makeTxn({ id: 't3', amount: 3000, status: 'succeeded' }),
+    ]
+    const patterns = [
+      makePattern({ affected_transactions: ['t1', 't2'] }),
+      makePattern({ affected_transactions: ['t2', 't3'] }), // t2 overlaps
+    ]
+    const result = computeFraudExposure(txns, patterns)
+    expect(result.atRiskCount).toBe(3) // t1, t2, t3 — t2 counted once
+    expect(result.atRiskAmount).toBe(6000)
+    expect(result.confirmedLossAmount).toBe(6000)
+  })
+
+  it('should split confirmed loss vs at-risk by status', () => {
+    const txns = [
+      makeTxn({ id: 't1', amount: 10000, status: 'succeeded' }),
+      makeTxn({ id: 't2', amount: 20000, status: 'failed' }),
+      makeTxn({ id: 't3', amount: 30000, status: 'pending' }),
+      makeTxn({ id: 't4', amount: 40000, status: 'canceled' }),
+    ]
+    const patterns = [makePattern({ affected_transactions: ['t1', 't2', 't3', 't4'] })]
+    const result = computeFraudExposure(txns, patterns)
+    expect(result.atRiskAmount).toBe(100000) // all four
+    expect(result.atRiskCount).toBe(4)
+    expect(result.confirmedLossAmount).toBe(10000) // only succeeded
   })
 })

@@ -15,6 +15,7 @@ import {
   computeVolumeByDay,
   computeFraudSummary,
   computeOverviewStats,
+  computeFraudExposure,
 } from '@/lib/analytics'
 
 function getCSSVar(name: string): string {
@@ -61,6 +62,7 @@ export default function DashboardPage() {
   }, [router])
 
   const stats = useMemo(() => computeOverviewStats(transactions, fraudPatterns), [transactions, fraudPatterns])
+  const exposure = useMemo(() => computeFraudExposure(transactions, fraudPatterns), [transactions, fraudPatterns])
   const statusDist = useMemo(() => computeStatusDistribution(transactions), [transactions])
   const processorBreak = useMemo(() => computeProcessorBreakdown(transactions), [transactions])
   const volumeByDay = useMemo(() => computeVolumeByDay(transactions), [transactions])
@@ -90,7 +92,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard icon={Activity} label="Total Transactions" value={stats.total.toLocaleString()} />
         <StatCard icon={DollarSign} label="Total Volume" value={formatDollar(stats.volume)} />
-        <StatCard icon={ShieldAlert} label="Fraud Rate" value={`${stats.fraudRate.toFixed(1)}%`} sub={`${fraudPatterns.length} patterns`} />
+        <StatCard icon={ShieldAlert} label="At Risk" value={formatDollar(exposure.atRiskAmount)} sub={`${exposure.atRiskCount} flagged transactions`} />
         <StatCard icon={BarChart3} label="Avg Transaction" value={formatDollar(stats.avgAmount)} />
       </div>
 
