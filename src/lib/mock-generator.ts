@@ -2,6 +2,40 @@ import { TransactionData } from '@/types'
 
 export type ProcessorType = 'stripe' | 'paypal' | 'adyen'
 
+const CUSTOMER_NAMES = [
+  'Sarah Chen', 'Marcus Johnson', 'Priya Patel', 'James O\'Brien', 'Aisha Okonkwo',
+  'Liam Novak', 'Emma Tanaka', 'Diego Herrera', 'Zara Ahmed', 'Nathan Kim',
+  'Sofia Rossi', 'Elijah Brooks', 'Maya Singh', 'Oliver Petrov', 'Chloe Martin',
+  'Ravi Menon', 'Isabella Nguyen', 'Ben Hoffman', 'Lucia Morales', 'Theo Walsh',
+]
+
+const PRODUCT_DESCRIPTIONS = {
+  legitimate: [
+    'MacBook Pro 14"', 'Annual subscription renewal', 'Nike Air Max 90', 'Patagonia down jacket',
+    'Sony WH-1000XM5 headphones', 'Kindle Paperwhite', 'Le Creuset Dutch oven', 'Dyson V15 vacuum',
+    'Spotify Premium (yearly)', 'Adobe Creative Cloud', 'Hotel booking — 2 nights', 'Uber Eats order',
+    'Grocery delivery', 'Gym membership renewal', 'iPad Air',
+  ],
+  digital: [
+    'Steam wallet top-up', 'App Store credit', 'Xbox Game Pass', 'PlayStation Store credit',
+    'Nintendo eShop card', 'Google Play balance', 'Discord Nitro', 'Twitch bits purchase',
+  ],
+  crypto: [
+    'BTC purchase', 'ETH exchange', 'USDC conversion', 'Crypto wallet top-up', 'Bitcoin transfer',
+  ],
+  highValue: [
+    'Rolex Submariner', 'Gaming PC build', 'Flight to Dubai (business class)',
+    'Canon EOS R5 camera kit', 'Louis Vuitton handbag', 'Peloton Bike+',
+    'Home theater system', 'Electric scooter', 'Designer watch', 'Luxury resort booking',
+  ],
+  // Card-testing descriptions stay terse — that IS what card-testing looks like in logs
+  cardTesting: ['Auth check', 'Card verify', 'Test charge', 'Verification'],
+}
+
+function pickFrom<T>(arr: T[], i: number): T {
+  return arr[i % arr.length]
+}
+
 export interface GeneratorConfig {
   count: number
   processors: ProcessorType[]
@@ -145,13 +179,14 @@ export class MockTransactionGenerator {
         processor,
         created: now - Math.floor(Math.random() * 3600),
         customer: `cus_test_${i % 3}`,
-        description: 'Card validation',
+        description: pickFrom(PRODUCT_DESCRIPTIONS.cardTesting, i),
         payment_method: 'card_test',
         metadata: {
           country: 'US',
           ip_address: this.randomIP(),
           risk_score: (85 + Math.floor(Math.random() * 15)).toString(),
-          fraud_indicators: 'card_testing,rapid_succession,small_amounts'
+          fraud_indicators: 'card_testing,rapid_succession,small_amounts',
+          customer_name: pickFrom(CUSTOMER_NAMES, i % 3),
         }
       })
     }
@@ -172,14 +207,15 @@ export class MockTransactionGenerator {
         processor,
         created: now - Math.floor(Math.random() * 1800),
         customer: `cus_velocity_${i % 2}`,
-        description: 'Digital goods purchase',
+        description: pickFrom(PRODUCT_DESCRIPTIONS.digital, i),
         payment_method: 'card_velocity',
         metadata: {
           country: 'US',
           ip_address: this.randomIP(),
           risk_score: (80 + Math.floor(Math.random() * 15)).toString(),
           fraud_indicators: 'velocity_fraud,same_merchant,rapid_succession',
-          merchant_category: 'gaming'
+          merchant_category: 'gaming',
+          customer_name: pickFrom(CUSTOMER_NAMES, i % 2),
         }
       })
     }
@@ -202,13 +238,14 @@ export class MockTransactionGenerator {
         processor,
         created: now - Math.floor(Math.random() * 7200),
         customer: `cus_highrisk_${i}`,
-        description: 'International purchase',
+        description: pickFrom(PRODUCT_DESCRIPTIONS.highValue, i),
         payment_method: 'card_international',
         metadata: {
           country,
           ip_address: this.randomIP(),
           risk_score: (85 + Math.floor(Math.random() * 10)).toString(),
-          fraud_indicators: 'high_risk_country,international_card,new_customer'
+          fraud_indicators: 'high_risk_country,international_card,new_customer',
+          customer_name: pickFrom(CUSTOMER_NAMES, i),
         }
       })
     }
@@ -230,13 +267,14 @@ export class MockTransactionGenerator {
         processor,
         created: now - Math.floor(Math.random() * 10800),
         customer: `cus_round_${i}`,
-        description: 'Business transaction',
+        description: pickFrom(PRODUCT_DESCRIPTIONS.highValue, i),
         payment_method: 'card_business',
         metadata: {
           country: 'US',
           ip_address: this.randomIP(),
           risk_score: '65',
-          fraud_indicators: 'round_amount,automated_pattern'
+          fraud_indicators: 'round_amount,automated_pattern',
+          customer_name: pickFrom(CUSTOMER_NAMES, i),
         }
       })
     }
@@ -257,14 +295,15 @@ export class MockTransactionGenerator {
         processor,
         created: now - Math.floor(Math.random() * 1800),
         customer: `cus_retry_${i % 2}`,
-        description: 'Subscription renewal',
+        description: pickFrom(PRODUCT_DESCRIPTIONS.legitimate, i),
         payment_method: `card_attempt_${i}`,
         metadata: {
           country: 'US',
           ip_address: this.randomIP(),
           risk_score: '80',
           fraud_indicators: 'multiple_retries,card_testing,velocity_fraud',
-          attempt_number: (i + 1).toString()
+          attempt_number: (i + 1).toString(),
+          customer_name: pickFrom(CUSTOMER_NAMES, i % 2),
         }
       })
     }
@@ -285,14 +324,15 @@ export class MockTransactionGenerator {
         processor,
         created: now - Math.floor(Math.random() * 3600),
         customer: i % 2 === 0 ? `cus_crypto_${i}` : undefined,
-        description: 'Cryptocurrency exchange',
+        description: pickFrom(PRODUCT_DESCRIPTIONS.crypto, i),
         payment_method: 'card_crypto',
         metadata: {
           country: i % 3 === 0 ? 'VPN' : 'US',
           merchant_category: 'cryptocurrency',
           ip_address: this.randomIP(),
           risk_score: (85 + Math.floor(Math.random() * 10)).toString(),
-          fraud_indicators: 'crypto_exchange,high_risk_merchant,money_laundering_risk'
+          fraud_indicators: 'crypto_exchange,high_risk_merchant,money_laundering_risk',
+          customer_name: i % 2 === 0 ? pickFrom(CUSTOMER_NAMES, i) : undefined,
         }
       })
     }
@@ -314,14 +354,15 @@ export class MockTransactionGenerator {
         processor,
         created: nightTime + (i * 300),
         customer: `cus_night_${i}`,
-        description: 'Late night purchase',
+        description: pickFrom(PRODUCT_DESCRIPTIONS.digital, i),
         payment_method: 'card_stolen',
         metadata: {
           country: ['RU', 'PK', 'CN'][i % 3],
           ip_address: this.randomIP(),
           risk_score: (85 + Math.floor(Math.random() * 10)).toString(),
           fraud_indicators: 'off_hours,high_risk_country,stolen_card_pattern',
-          transaction_hour: '03'
+          transaction_hour: '03',
+          customer_name: pickFrom(CUSTOMER_NAMES, i),
         }
       })
     }
@@ -342,13 +383,14 @@ export class MockTransactionGenerator {
         processor,
         created: now - Math.floor(Math.random() * 7200),
         customer: `cus_highval_${i}`,
-        description: 'High-value purchase',
+        description: pickFrom(PRODUCT_DESCRIPTIONS.highValue, i),
         payment_method: 'card_premium',
         metadata: {
           country: ['RO', 'NG', 'CN'][i % 3],
           ip_address: this.randomIP(),
           risk_score: (75 + Math.floor(Math.random() * 15)).toString(),
-          fraud_indicators: 'high_value,international,new_customer'
+          fraud_indicators: 'high_value,international,new_customer',
+          customer_name: pickFrom(CUSTOMER_NAMES, i),
         }
       })
     }
@@ -370,13 +412,14 @@ export class MockTransactionGenerator {
         processor,
         created: now - Math.floor(Math.random() * 86400 * 7),
         customer: `cus_legit_${i}`,
-        description: ['Online purchase', 'Subscription', 'Digital download', 'Service fee'][i % 4],
+        description: pickFrom(PRODUCT_DESCRIPTIONS.legitimate, i),
         payment_method: 'card_verified',
         metadata: {
           country: ['US', 'CA', 'GB', 'AU', 'DE', 'FR'][i % 6],
           ip_address: this.randomIP(),
           risk_score: (10 + Math.floor(Math.random() * 30)).toString(),
-          fraud_indicators: 'none'
+          fraud_indicators: 'none',
+          customer_name: pickFrom(CUSTOMER_NAMES, i),
         }
       })
     }

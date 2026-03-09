@@ -152,9 +152,14 @@ export default function TransactionDrawer({ transaction, fraudPatterns, onClose 
           {/* Customer */}
           {transaction.customer && (
             <Section title="Customer">
-              <span className="font-mono text-sm text-text-mono">{transaction.customer}</span>
-              {transaction.metadata?.country && (
-                <span className="ml-2 text-xs text-text-tertiary uppercase">{transaction.metadata.country}</span>
+              <div>
+                <span className="font-mono text-sm text-text-mono">{transaction.customer}</span>
+                {transaction.metadata?.country && (
+                  <span className="ml-2 text-xs text-text-tertiary uppercase">{transaction.metadata.country}</span>
+                )}
+              </div>
+              {transaction.metadata?.customer_name && (
+                <div className="mt-1 text-xs text-text-secondary">{transaction.metadata.customer_name}</div>
               )}
             </Section>
           )}

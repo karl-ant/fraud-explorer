@@ -4,7 +4,8 @@ import StripeMCPClient from '@/lib/stripe-mcp'
 import PayPalMockClient from '@/lib/paypal-mock'
 import AdyenMockClient from '@/lib/adyen-mock'
 import { FraudDetector } from '@/lib/fraud-detector'
-import { TransactionData, QueryResponse, FraudPattern, ClaudeQueryResponse, TransactionFilters } from '@/types'
+import { buildNarrativeSummary } from '@/lib/narrative'
+import { TransactionData, QueryResponse, ClaudeQueryResponse, TransactionFilters } from '@/types'
 
 // Singleton clients - reused across requests
 const stripeMCP = new StripeMCPClient()
@@ -59,7 +60,7 @@ export async function POST(request: NextRequest) {
     const fraudPatterns = FraudDetector.analyzeFraudPatterns(allTransactions)
 
     // Generate summary based on the query and results
-    const summary = generateSummary(query, allTransactions, fraudPatterns)
+    const summary = buildNarrativeSummary(allTransactions, fraudPatterns)
 
     const response: QueryResponse = {
       data: allTransactions,
@@ -218,52 +219,3 @@ function parseQueryToFiltersLegacy(query: string): TransactionFilters {
   return filters
 }
 
-function generateSummary(query: string, transactions: TransactionData[], fraudPatterns: FraudPattern[] = []): string {
-  const total = transactions.length
-  const successful = transactions.filter(t => t.status === 'succeeded').length
-  const failed = transactions.filter(t => t.status === 'failed').length
-  const pending = transactions.filter(t => t.status === 'pending').length
-
-  const totalAmount = transactions
-    .filter(t => t.status === 'succeeded')
-    .reduce((sum, t) => sum + t.amount, 0)
-
-  const avgAmount = successful > 0 ? totalAmount / successful : 0
-
-  let summary = `Found ${total} transactions. `
-  
-  if (successful > 0) {
-    summary += `${successful} successful ($${(totalAmount / 100).toLocaleString()}), `
-  }
-  if (failed > 0) {
-    summary += `${failed} failed, `
-  }
-  if (pending > 0) {
-    summary += `${pending} pending, `
-  }
-
-  // Remove trailing comma and space
-  summary = summary.replace(/, $/, '. ')
-
-  if (successful > 0) {
-    summary += `Average successful transaction: $${(avgAmount / 100).toFixed(2)}. `
-  }
-
-  // Add fraud pattern summary
-  if (fraudPatterns.length > 0) {
-    const criticalPatterns = fraudPatterns.filter(p => p.risk_level === 'critical').length
-    const highPatterns = fraudPatterns.filter(p => p.risk_level === 'high').length
-    
-    summary += `🚨 FRAUD ALERT: ${fraudPatterns.length} suspicious pattern${fraudPatterns.length > 1 ? 's' : ''} detected`
-    if (criticalPatterns > 0) {
-      summary += ` (${criticalPatterns} critical${criticalPatterns > 1 ? '' : ''}`
-      if (highPatterns > 0) summary += `, ${highPatterns} high risk`
-      summary += `)`
-    } else if (highPatterns > 0) {
-      summary += ` (${highPatterns} high risk)`
-    }
-    summary += `. Immediate review recommended.`
-  }
-
-  return summary
-}

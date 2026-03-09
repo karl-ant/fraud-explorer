@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { Wand2, Loader2, AlertTriangle } from 'lucide-react'
+import { Wand2, Loader2, AlertTriangle, Sparkles } from 'lucide-react'
 import { GeneratorConfig, MockTransactionGenerator, ProcessorType } from '@/lib/mock-generator'
+import { SCENARIO_PRESETS, applyPreset } from '@/lib/generator-presets'
 import { TransactionData } from '@/types'
 
 interface MockTransactionGeneratorProps {
@@ -38,6 +39,20 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
 
   const [generating, setGenerating] = useState(false)
   const [validationError, setValidationError] = useState<string | null>(null)
+  const [selectedPreset, setSelectedPreset] = useState<string | null>(null)
+
+  const updateConfig = (next: GeneratorConfig) => {
+    setConfig(next)
+    setSelectedPreset(null)
+  }
+
+  const handlePresetClick = (presetId: string) => {
+    const preset = SCENARIO_PRESETS.find(p => p.id === presetId)
+    if (!preset) return
+    setConfig(applyPreset(preset))
+    setSelectedPreset(presetId)
+    setValidationError(null)
+  }
 
   // Compute validation state
   const fraudTotal = Object.values(config.fraudMix).reduce((a, b) => a + b, 0)
@@ -100,6 +115,48 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
         </h3>
       </div>
 
+      {/* Scenario Presets */}
+      <div>
+        <label className="text-xs font-semibold uppercase tracking-wider text-text-secondary mb-2 flex items-center gap-1.5">
+          <Sparkles className="h-3.5 w-3.5" />
+          Scenario Presets
+        </label>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setSelectedPreset(null)}
+            className={`px-3 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all
+                      ${selectedPreset === null
+                        ? 'bg-terminal-500 text-white shadow-glow'
+                        : 'bg-space-700 text-text-secondary hover:text-text-primary hover:bg-space-600'
+                      }`}
+          >
+            Custom
+          </button>
+          {SCENARIO_PRESETS.map(preset => {
+            const isActive = selectedPreset === preset.id
+            return (
+              <button
+                key={preset.id}
+                onClick={() => handlePresetClick(preset.id)}
+                title={preset.tagline}
+                className={`px-3 py-2 text-xs font-medium uppercase tracking-wider rounded-lg transition-all
+                          ${isActive
+                            ? 'bg-terminal-500 text-white shadow-glow'
+                            : 'bg-space-700 text-text-secondary hover:text-text-primary hover:bg-space-600'
+                          }`}
+              >
+                {preset.name}
+              </button>
+            )
+          })}
+        </div>
+        {selectedPreset && (
+          <p className="mt-2 text-xs text-text-tertiary italic">
+            {SCENARIO_PRESETS.find(p => p.id === selectedPreset)?.tagline}
+          </p>
+        )}
+      </div>
+
       {/* Count and Processor Row */}
       <div className="grid grid-cols-2 gap-6">
         {/* Count Input */}
@@ -110,7 +167,7 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
           <input
             type="number"
             value={config.count}
-            onChange={(e) => setConfig({ ...config, count: parseInt(e.target.value) || 0 })}
+            onChange={(e) => updateConfig({ ...config, count: parseInt(e.target.value) || 0 })}
             className="w-full px-4 py-3 bg-space-700 border border-border rounded-lg
                      text-text-primary font-mono text-sm
                      focus:border-terminal-400 focus:ring-2 focus:ring-terminal-400/30
@@ -139,7 +196,7 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
                     const next = isActive
                       ? config.processors.filter(p => p !== proc)
                       : [...config.processors, proc]
-                    setConfig({ ...config, processors: next as ProcessorType[] })
+                    updateConfig({ ...config, processors: next as ProcessorType[] })
                   }}
                   className={`flex-1 px-4 py-3 text-sm font-medium uppercase tracking-wider rounded-lg transition-all
                             ${isActive
@@ -165,7 +222,7 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
           <input
             type="date"
             value={config.dateRange.start.toISOString().split('T')[0]}
-            onChange={(e) => setConfig({
+            onChange={(e) => updateConfig({
               ...config,
               dateRange: { ...config.dateRange, start: new Date(e.target.value) }
             })}
@@ -182,7 +239,7 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
           <input
             type="date"
             value={config.dateRange.end.toISOString().split('T')[0]}
-            onChange={(e) => setConfig({
+            onChange={(e) => updateConfig({
               ...config,
               dateRange: { ...config.dateRange, end: new Date(e.target.value) }
             })}
@@ -218,7 +275,7 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
                 min="0"
                 max="100"
                 value={value}
-                onChange={(e) => setConfig({
+                onChange={(e) => updateConfig({
                   ...config,
                   fraudMix: { ...config.fraudMix, [key]: parseInt(e.target.value) }
                 })}
@@ -257,7 +314,7 @@ export default function MockTransactionGeneratorComponent({ onTransactionsGenera
                 min="0"
                 max="100"
                 value={value}
-                onChange={(e) => setConfig({
+                onChange={(e) => updateConfig({
                   ...config,
                   statusDistribution: { ...config.statusDistribution, [key]: parseInt(e.target.value) }
                 })}
